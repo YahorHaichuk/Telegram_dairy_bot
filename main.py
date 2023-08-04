@@ -170,15 +170,12 @@ def all_callbacks_handler(call):
         done_today_callback(call)
     elif len(call.data.split('*')) > 2 and call.data.split('*')[1] == text[1:-1] and call.data.split('*')[2] == ' week':
         callback_recurring_tasks_many_words_handler(call)
-        bot.send_message(call.message.chat.id, 'обработчик многих слов неделя')
 
     # elif (len(call.data.split('*')) > 2
     #       and call.data.split('*')[1:2][1] == text[1:-1] and call.data.split()[2] == ' week'):
     #     bot.send_message(call.message.chat.id, 'обработчик одного слова неделя')
     elif call.data.split('*')[0] == text[1:-1] and call.data.split('*')[1].replace(" ", "") in days:
         recurring_tasks_week(call)
-
-    x = 1
 
 
 @bot.callback_query_handler(
@@ -201,7 +198,12 @@ def callback_recurring_tasks_many_words_handler(call):
     markup = types.InlineKeyboardMarkup(row_width=3)
     buttons = [types.InlineKeyboardButton(day, callback_data=f'{current_task}* {day}') for day in days]
     markup.add(*buttons)
-    bot.edit_message_text('Выберите день недели:', call.message.chat.id, call.message.message_id, reply_markup=markup)
+    text = '''Выберите дни недели в которые будет повторятся ваша задача от сегодняшнего дня и до конца недели.\n
+            Вы находитесь в режиме выбора дней повтора задач на текущую неделю.\n
+            Что бы добавить повторяющмеся задачи на следующую неделю сделайте это в понедельник,
+            или добавте задачу в ручную с помошью команды /start\n
+            Либо выберите период повторения месяц'''
+    bot.edit_message_text(text, call.message.chat.id, call.message.message_id, reply_markup=markup)
 
 
 def recurring_tasks_week(call):
@@ -210,7 +212,7 @@ def recurring_tasks_week(call):
     day = call.data.split('*')[1].replace(" ", "")
     if day not in recurring_this_week:
         recurring_this_week.append(day)
-    task = call.data.split()[0][:-1]
+    task = call.data.split('*')[0]
 
     db.recurring_tasks_week(task, day, call.message.chat.id)
 
@@ -260,6 +262,13 @@ def send_time():
 
 
 #send_time()
+def bot_polling():
+    try:
+        bot.polling(none_stop=True)
+    except ConnectionResetError:
+        time.sleep(5)
+        bot.polling(none_stop=True)
 
-bot.polling(none_stop=True)
 
+if __name__ == "__main__":
+    bot_polling()

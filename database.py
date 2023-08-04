@@ -156,8 +156,6 @@ class BotDb:
     def recurring_tasks_week(self, task, days, user_id):
         """Добавление повторяюзейся задачи на выбранный день недели"""
         week_days = get_week_days_dict()
-        today = datetime.today()
-        formatted_date = today.strftime("%Y-%m-%d")
         try:
             date = week_days[days]
             task_in_day = self.cursor.execute('SELECT task, date FROM tasks WHERE task = ? AND date = ?', (task, date))
@@ -167,8 +165,6 @@ class BotDb:
                 self.cursor.execute('INSERT INTO tasks (task, date, user_id, elapsed_time, is_done) VALUES (?,?,?,?,?)',
                                     (task, week_days[days], user_id, 0, 0))
                 bot.send_message(user_id, f'Задача {task} добавлена на день {days}')
-            elif date != formatted_date:
-                bot.send_message(user_id, '')
             else:
                 bot.send_message(user_id, 'Вы уже выбрали этот день')
 
