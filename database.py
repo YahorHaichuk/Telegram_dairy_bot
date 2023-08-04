@@ -12,6 +12,9 @@ from auxiliary_functions import get_week_days_list, convert_to_datetime, get_wee
 TOKEN = '6193050640:AAGxCsSYcN9ykAf6N29Z-bcLCYUFqQYJ7YQ'
 bot = telebot.TeleBot(TOKEN)
 
+recurring_days_list = []
+recurring_days_dict = {}
+
 
 def morning_send():
     db = BotDb('dairy_db.sql')
@@ -51,6 +54,7 @@ class BotDb:
         self.edited_task_text = None
         self.editing_task_date = None
         self.editing_task_text = None
+
 
     def create_db(self, chat_id):
         """Создание базы данных. Таблица users и tasks"""
@@ -118,7 +122,7 @@ class BotDb:
 
     def task_date(self, text, date, message):
         """Добавление даты выполнения в добавляемую задачу"""
-        task = text
+        task = text.replace("*", "")
         self.date = date
         date_str = self.date.strip()
         date = convert_to_datetime(message, date=date_str)
@@ -150,15 +154,26 @@ class BotDb:
         return self.conn.commit()
 
     def recurring_tasks_week(self, task, days, user_id):
+        """Добавление повторяюзейся задачи на выбранный день недели"""
         week_days = get_week_days_dict()
-        recurring_days = []
-        # Предполагается, что у вас есть функция get_week_days_dict()
-        if days in week_days.keys() and days not in recurring_days:
-            self.cursor.execute('INSERT INTO tasks (task, date, user_id, elapsed_time, is_done) VALUES (?,?,?,?,?)',
-                                (task, week_days[days], user_id, 0, 0))
-            recurring_days.append(days)
-        else:
-            bot.send_message(user_id, 'Вы уже выбрали этот день')
+        today = datetime.today()
+        formatted_date = today.strftime("%Y-%m-%d")
+        try:
+            date = week_days[days]
+            task_in_day = self.cursor.execute('SELECT task, date FROM tasks WHERE task = ? AND date = ?', (task, date))
+            result = task_in_day.fetchone()
+
+            if days in week_days.keys() and not result:
+                self.cursor.execute('INSERT INTO tasks (task, date, user_id, elapsed_time, is_done) VALUES (?,?,?,?,?)',
+                                    (task, week_days[days], user_id, 0, 0))
+                bot.send_message(user_id, f'Задача {task} добавлена на день {days}')
+            elif date != formatted_date:
+                bot.send_message(user_id, '')
+            else:
+                bot.send_message(user_id, 'Вы уже выбрали этот день')
+
+        except KeyError:
+            bot.send_message(user_id, 'Выберите день от сегодняшнего и позже')
 
         return self.conn.commit()
 

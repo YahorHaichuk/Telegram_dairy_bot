@@ -93,7 +93,6 @@ def task_date(message):
     button_month = types.InlineKeyboardButton('Месяц', callback_data='month')
     markup.add(button_week, button_month)
 
-    # Отправляем меню пользователю
     bot.send_message(message.chat.id, 'Выберите период повторения:', reply_markup=markup)
 
 
@@ -165,6 +164,23 @@ def done_today_tasks(message):
     user_today_tasks = today_tasks
 
 
+@bot.callback_query_handler(func=lambda call: True)
+def all_callbacks_handler(call):
+    if call.data is not None and user_today_tasks is not None and call.data in user_today_tasks:
+        done_today_callback(call)
+    elif len(call.data.split('*')) > 2 and call.data.split('*')[1] == text[1:-1] and call.data.split('*')[2] == ' week':
+        callback_recurring_tasks_many_words_handler(call)
+        bot.send_message(call.message.chat.id, 'обработчик многих слов неделя')
+
+    # elif (len(call.data.split('*')) > 2
+    #       and call.data.split('*')[1:2][1] == text[1:-1] and call.data.split()[2] == ' week'):
+    #     bot.send_message(call.message.chat.id, 'обработчик одного слова неделя')
+    elif call.data.split('*')[0] == text[1:-1] and call.data.split('*')[1].replace(" ", "") in days:
+        recurring_tasks_week(call)
+
+    x = 1
+
+
 @bot.callback_query_handler(
     func=lambda call: call.data is not None and user_today_tasks is not None and call.data in user_today_tasks
 )
@@ -178,64 +194,25 @@ def done_today_callback(call):
     bot.register_next_step_handler(call.message, add_start_time)
 
 
-@bot.callback_query_handler(
-    func=lambda call: (call.data.split('*')[1:2][0] == text[1:-1] and call.data.split()[1] == 'week') or (
-                              call.data.split('*')[1:2][1] == text[1:-1] and call.data.split()[2] == 'week'))
-def callback_recurring_tasks_handler(call):
+def callback_recurring_tasks_many_words_handler(call):
     """Обработка повторяющихя задач периодом в 1 неделю."""
-    z = call.data.split()[0]
-    y = call.data.split('*')[1:2]
-    gg = call.data.split('*')[1:2][0]
-    if len(call.data.split()) > 2:
-        t = call.data.split()[2]
     current_task = call.data.split('*')[1:2][0]
 
-
-    day = call.data.split('*')[1]
-    # Если выбрана кнопка "Неделя", создаем подменю для выбора дней недели
     markup = types.InlineKeyboardMarkup(row_width=3)
     buttons = [types.InlineKeyboardButton(day, callback_data=f'{current_task}* {day}') for day in days]
     markup.add(*buttons)
-    # Редактируем сообщение с кнопками, чтобы заменить основное меню на подменю
     bot.edit_message_text('Выберите день недели:', call.message.chat.id, call.message.message_id, reply_markup=markup)
 
-    # bot.send_message(call.message.chat.id, current_task)
-    # bot.send_message(call.message.chat.id, day)
-    # bot.send_message(call.message.chat.id, call.data)
 
-
-@bot.callback_query_handler(func=lambda call: True)
-def ololo(call):
-    bot.send_message(call.message.chat.id, 'callback')
-    bot.send_message(call.message.chat.id, f' ff {call.data.split("*")[0]}')
-    bot.send_message(call.message.chat.id, call.data.split('*')[1])
-    bot.send_message(call.message.chat.id, text[1:-1])
-    bot.send_message(call.message.chat.id, call.data.split('*')[2])
-    bot.send_message(call.message.chat.id, call.data)
-
-    x = 1
-
-
-#TODO Сделать перехват дней тут
-@bot.callback_query_handler(
-    func=lambda call: call.data.split('*')[0] == text[1:-1] and call.data.split()[1] in days
-)
 def recurring_tasks_week(call):
     db = BotDb('dairy_db.sql')
     global recurring_this_week
-    day = call.data.split()[1]
+    day = call.data.split('*')[1].replace(" ", "")
     if day not in recurring_this_week:
         recurring_this_week.append(day)
     task = call.data.split()[0][:-1]
 
-    bot.send_message(call.message.chat.id, f'это задача {task}')
-    bot.send_message(call.message.chat.id, f'это день {day}')
-
     db.recurring_tasks_week(task, day, call.message.chat.id)
-
-
-
-    x = 0
 
 
 def add_start_time(message):
