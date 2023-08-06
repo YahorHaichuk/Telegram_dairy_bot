@@ -2,6 +2,7 @@ import datetime
 import sqlite3
 import time
 
+import requests
 from telebot import types
 
 from auxiliary_functions import duration_in_minutes
@@ -81,6 +82,8 @@ def task(message):
     global text
     text = f'*{message.text}*'
     bot.send_message(message.chat.id, 'Напишите дату в формате:  2023-06-30')
+
+    #TODO сделать кнопки
     bot.register_next_step_handler(message, task_date)
 
 
@@ -91,7 +94,8 @@ def task_date(message):
     markup = types.InlineKeyboardMarkup(row_width=2)
     button_week = types.InlineKeyboardButton('Неделя', callback_data=f'{text} week')
     button_month = types.InlineKeyboardButton('Месяц', callback_data='month')
-    markup.add(button_week, button_month)
+    no_repeatable = types.InlineKeyboardButton('Без повторения', callback_data='only_one')
+    markup.add(button_week, button_month, no_repeatable)
 
     bot.send_message(message.chat.id, 'Выберите период повторения:', reply_markup=markup)
 
@@ -170,6 +174,9 @@ def all_callbacks_handler(call):
         done_today_callback(call)
     elif len(call.data.split('*')) > 2 and call.data.split('*')[1] == text[1:-1] and call.data.split('*')[2] == ' week':
         callback_recurring_tasks_many_words_handler(call)
+
+    elif call.data == 'only_one':
+        bot.send_message(call.message.chat.id, 'Задача добавлена')
 
     # elif (len(call.data.split('*')) > 2
     #       and call.data.split('*')[1:2][1] == text[1:-1] and call.data.split()[2] == ' week'):
@@ -262,12 +269,14 @@ def send_time():
 
 
 #send_time()
+
+#TODO не работает функция при дисконекте
 def bot_polling():
     try:
         bot.polling(none_stop=True)
-    except ConnectionResetError:
+    except requests.exceptions.ConnectionError or ConnectionResetError:
         time.sleep(5)
-        bot.polling(none_stop=True)
+        bot_polling()
 
 
 if __name__ == "__main__":

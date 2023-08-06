@@ -173,6 +173,9 @@ class BotDb:
 
         return self.conn.commit()
 
+    def task_editing(self):
+        pass
+
     def close(self):
         """Закрытие соеденения с БД."""
 
