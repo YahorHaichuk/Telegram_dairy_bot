@@ -1,5 +1,6 @@
 import datetime
 import sqlite3
+import sys
 import time
 from functools import partial
 
@@ -7,7 +8,6 @@ import requests
 from telebot import types
 
 from auxiliary_functions import duration_in_minutes
-from bot_main import BotTG
 from database import BotDb, CurrentHour
 import telebot
 
@@ -27,21 +27,40 @@ recurring_this_week = []
 
 @bot.message_handler(commands=['week'])
 def get_week_tasks(message):
-    BotTG().get_week_tasks(message)
+    db = BotDb('dairy_db.sql')
+    week_tasks = db.week_tasks(message.chat.id)
+    db.close()
+    for el in week_tasks:
+        bot.send_message(message.chat.id, f'задачу  {el[1]} нужно сделать {el[2]}\n')
 
 
 @bot.message_handler(commands=['day'])
 def get_day_tasks(message):
-    BotTG().get_day_tasks(message)
+    db = BotDb('dairy_db.sql')
+    day_tasks = db.day_tasks(message.chat.id)
+    db.close()
+    for el in day_tasks:
+        bot.send_message(message.chat.id, f'задачу  {el[1]} нужно сделать {el[2]}\n')
+
 
 @bot.message_handler(commands=['month'])
 def get_month_tasks(message):
-    BotTG().get_month_tasks(message)
+    db = BotDb('dairy_db.sql')
+    day_tasks = db.month_tasks(message.chat.id)
+    db.close()
+    for el in day_tasks:
+        bot.send_message(message.chat.id, f'задачу  {el[1]} нужно сделать {el[2]}\n')
+
 
 @bot.message_handler(commands=['add_task'])
 def add_task(message):
     """Добавление кнопок повторения задач"""
-    BotTG().add_task(message)
+    markup = types.InlineKeyboardMarkup(row_width=2)
+    button_week = types.InlineKeyboardButton('Неделя', callback_data='week')
+    button_month = types.InlineKeyboardButton('Месяц', callback_data='month')
+    no_repeatable = types.InlineKeyboardButton('Без повторения', callback_data='only_one')
+    markup.add(button_week, button_month, no_repeatable)
+    bot.send_message(message.chat.id, 'Выберите период повторения:', reply_markup=markup)
     bot.register_next_step_handler(message, start)
 
 
@@ -54,56 +73,73 @@ def cycle_month(message):
 
 @bot.message_handler(commands=['task_edit'])
 def get_editing_task_text(message):
-    BotTG().get_editing_task_text(message)
+    bot.send_message(message.chat.id, 'Ведите задачу для редактирования')
 
     bot.register_next_step_handler(message, get_editing_task_db)
-    # bot.register_next_step_handler(message, get_editing_task_db)
+
 
 def get_editing_task_db(message):
-    #BotTG().get_editing_task_db(edited_message)
-    pass
+    buttons = []
+    db = BotDb('dairy_db.sql')
+    task = message.text.strip()
+    result = db.get_task_editing(message, task)
 
-def get_editing_task_db(message):
-    BotTG().get_editing_task_db(message)
-    bot.register_next_step_handler(message, get_update_text)
+    markup = types.InlineKeyboardMarkup()
+
+    for i in result:
+        buttons.append(types.InlineKeyboardButton(f'{i[1]}', callback_data=f'{i[0]} * {i[1]}'))
+
+    markup.add(*buttons)
+    text = f'''Редактируемая задача {result[0][0]} обнаруженв ы следушмщих днях на ближайжую неделю
+        пожалуйста выберите день в который вы хотите редактировать данную задачу'''
+    if result is not None:
+        bot.send_message(message.chat.id, text, reply_markup=markup)
+    else:
+        bot.send_message(message.chat.id, 'Выборка пуста')
 
 
-def get_update_text(message, editing_task, editing_date):
-    bot.send_message(message.chat.id, editing_task)
-    bot.send_message(message.chat.id, editing_date)
-    bot.send_message(message.chat.id, message.text)
-    # BotTG().update_task(message, editing_task, editing_date)
-    #
-    # bot.send_message(message.chat.id, 'Задача изменена')
+def update_info(message, editing_task, editing_date):
+    data = [editing_task, editing_date]
+    bot.send_message(message.chat.id, f'Привет! Введите текст:')
+
+    bot.register_next_step_handler(message, update_task, data=data)
 
 
-
-
-# def update_task(message):
-#     editing_task = message.from_user.editing_task
-#     editing_date = message.from_user.editing_date
-#
-#     db = BotDb('dairy_db.sql')
-#     db.update_task(message.text, editing_task, editing_date)
-#     bot.send_message(message.chat.id, 'Задача изменена')
-
+def update_task(message, data):
+    db = BotDb('dairy_db.sql')
+    db.update_task(message.text, data[0], data[1])
+    bot.send_message(message.chat.id, 'Задача изменена')
 
 
 @bot.message_handler(commands=['start'])
 def start(message):
-    BotTG().start(message)
+    db = BotDb('dairy_db.sql')
+    db.start(message.chat.id)
+
     bot.send_message(message.chat.id, 'Напишите задачу')
     bot.register_next_step_handler(message, task)
 
 
 def task(message):
-    BotTG().post_task_text(message)
+    global text
+    text = f'*{message.text}*'
+    bot.send_message(message.chat.id, 'Напишите дату в формате:  2023-06-30')
+
     #TODO сделать кнопки
     bot.register_next_step_handler(message, task_date)
 
 
 def task_date(message):
-    BotTG().post_task_date(message)
+    db = BotDb('dairy_db.sql')
+    db.task_date(text, message.text, message)
+
+    markup = types.InlineKeyboardMarkup(row_width=2)
+    button_week = types.InlineKeyboardButton('Неделя', callback_data=f'{text } week')
+    button_month = types.InlineKeyboardButton('Месяц', callback_data='month')
+    no_repeatable = types.InlineKeyboardButton('Без повторения', callback_data='only_one')
+    markup.add(button_week, button_month, no_repeatable)
+
+    bot.send_message(message.chat.id, 'Выберите период повторения:', reply_markup=markup)
 
 
 
@@ -174,6 +210,7 @@ def done_today_tasks(message):
     user_today_tasks = today_tasks
 
 
+
 @bot.callback_query_handler(func=lambda call: True)
 def all_callbacks_handler(call):
     if call.data is not None and user_today_tasks is not None and call.data in user_today_tasks:
@@ -188,9 +225,7 @@ def all_callbacks_handler(call):
           BotDb('dairy_db.sql').get_task_editing(call.message, call.data.lstrip('"(').rstrip(')"').split(' * ')[0])):
         editing_task = call.data.lstrip('"(').rstrip(')"').split(' * ')[0]
         editing_date = call.data.lstrip('"(').rstrip(')"').split(' * ')[1]
-        bot.send_message(
-            call.message.chat.id, f'Введите исправленный текст для задачи {editing_task}, в день {editing_date}')
-        get_update_text(call.message, editing_task, editing_date)
+        update_info(call.message, editing_task, editing_date)
 
     elif call.data.split(' * ')[0] == text[1:-1] and call.data.split('*')[1].replace(" ", "") in days:
         recurring_tasks_week(call)
@@ -232,7 +267,7 @@ def recurring_tasks_week(call):
     day = call.data.split('*')[1].replace(" ", "")
     if day not in recurring_this_week:
         recurring_this_week.append(day)
-    task = call.data.split('*')[0]
+    task = call.data.split('*')[0].strip()
 
     db.recurring_tasks_week(task, day, call.message.chat.id)
 

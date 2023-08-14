@@ -7,7 +7,10 @@ from threading import Thread
 
 import telebot
 import sqlite3
-from auxiliary_functions import get_week_days, convert_to_datetime
+
+from telebot import types
+
+from auxiliary_functions import convert_to_datetime
 
 text = None
 edited_task_text = None
@@ -162,9 +165,27 @@ def get_task_date_edit_message(message):
 
 
 def get_editing_task_text(message):
+    buttons = []
+    task = message.text.strip()
+    conn = sqlite3.connect('dairy_db.sql')
+    cur = conn.cursor()
+
+    cur.execute(
+        'SELECT date FROM tasks WHERE task = ?', (task,)
+    )
+    all_task_dates = cur.fetchall()
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+
+    buttons.append(types.KeyboardButton('test button'))
+    for i in all_task_dates:
+        buttons.append(types.KeyboardButton(i))
+
+    markup.add(*buttons)
+
     global editing_task_text
     editing_task_text = message.text.strip()
     bot.send_message(message.chat.id, 'Напишите новый текст задачи')
+
     bot.register_next_step_handler(message, task_editing)
 
 
@@ -176,7 +197,9 @@ def task_editing(message):
     date = convert_to_datetime(message, date=editing_task_date)
     edited_task_text = message.text.strip()
 
-    cur.execute(f"UPDATE tasks SET task = '{edited_task_text}'  WHERE task = '{editing_task_text}' AND date = '{date}'")
+    cur.execute(
+        f'UPDATE tasks SET task = ?  WHERE task = ? AND date = ?,', (edited_task_text, editing_task_text, date)
+    )
 
     cur.execute(f"SELECT task FROM tasks WHERE task = '{edited_task_text}' AND date = '{editing_task_date}'")
 

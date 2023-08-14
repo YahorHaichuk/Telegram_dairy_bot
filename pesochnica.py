@@ -1,45 +1,17 @@
-import datetime
-import time
-import threading
-from threading import Thread
 import telebot
-from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
-from telebot import types
+
 TOKEN = '6193050640:AAGxCsSYcN9ykAf6N29Z-bcLCYUFqQYJ7YQ'
-
 bot = telebot.TeleBot(TOKEN)
-locker = threading.RLock()
-
 @bot.message_handler(commands=['start'])
 def start(message):
-    # Создаем основное меню
-    markup = InlineKeyboardMarkup(row_width=2)
-    button_week = InlineKeyboardButton('Неделя', callback_data='week')
-    button_month = InlineKeyboardButton('Месяц', callback_data='month')
-    markup.add(button_week, button_month)
+    f = [1, 2, 4]
+    bot.send_message(message.chat.id, f' {f}Привет! Введите текст:')
 
-    # Отправляем меню пользователю
-    bot.send_message(message.chat.id, 'Выберите период повторения:', reply_markup=markup)
+    # Регистрируем следующий шаг для ожидания ввода текста от пользователя
+    bot.register_next_step_handler(message, lambda msg: process_text_input(msg, f, message.chat.id))
 
-# Обработчик нажатий на кнопки
-@bot.callback_query_handler(func=lambda call: True)
-def callback_handler(call):
-    if call.data == 'week':
-        # Если выбрана кнопка "Неделя", создаем подменю для выбора дней недели
-        markup = InlineKeyboardMarkup(row_width=3)
-        days = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']
-        buttons = [InlineKeyboardButton(day, callback_data=day) for day in days]
-        markup.add(*buttons)
+def process_text_input(message, f, chat_id):
+    user_text = message.text
+    bot.send_message(chat_id, f'Вы ввели:  {f} {user_text}')
 
-        # Редактируем сообщение с кнопками, чтобы заменить основное меню на подменю
-        bot.edit_message_text('Выберите день недели:', call.message.chat.id, call.message.message_id, reply_markup=markup)
-    elif call.data == 'month':
-        # Если выбрана кнопка "Месяц", делаем какие-то действия или отправляем другое меню
-        # Например:
-        bot.send_message(call.message.chat.id, 'Вы выбрали "Месяц"')
-    else:
-        # Обработка выбора дня недели или других кнопок, которые вы добавите
-        bot.send_message(call.message.chat.id, f'Вы выбрали день: {call.data}')
-
-# Запускаем бота
 bot.polling()

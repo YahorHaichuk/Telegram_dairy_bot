@@ -6,6 +6,7 @@ from datetime import datetime
 from threading import Thread
 
 import telebot
+from telebot import types
 
 from auxiliary_functions import get_week_days_list, convert_to_datetime, get_week_days_dict
 
@@ -46,15 +47,15 @@ class CurrentHour(Thread):
 
 class BotDb:
 
-    def __init__(self, db_name):
+    def __init__(self, db_name, edited_task_text=None, updated_text=None):
         """Инициализация соеденения с БД."""
         self.conn = sqlite3.connect(db_name)
         self.cursor = self.conn.cursor()
         self.date = None
-        self.edited_task_text = None
-        self.editing_task_date = None
-        self.editing_task_text = None
-
+        self.edited_task_text = edited_task_text
+        self.editing_date = None
+        self.editing_task = None
+        self.updated_text = updated_text
 
     def create_db(self, chat_id):
         """Создание базы данных. Таблица users и tasks"""
@@ -173,8 +174,23 @@ class BotDb:
 
         return self.conn.commit()
 
-    def task_editing(self):
-        pass
+    def get_task_editing(self, message, editing_task):
+        """Выбираем задачу для редактирования"""
+        today = datetime.today().date()
+        week = get_week_days_list()
+        sunday = week[-1]
+        self.cursor.execute(
+            f"""SELECT task, date FROM tasks WHERE task = ? AND user_id = ? AND date BETWEEN ? AND ?""",
+            (editing_task, message.chat.id, str(today), str(sunday))
+        )
+        return self.cursor.fetchall()
+
+    def update_task(self, updated_text, editing_task, editing_date):
+        self.cursor.execute(
+            f'UPDATE tasks SET task = ?  WHERE task = ? AND date = ?', (updated_text, editing_task, editing_date)
+        )
+
+        return self.conn.commit()
 
     def close(self):
         """Закрытие соеденения с БД."""
