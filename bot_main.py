@@ -1,13 +1,6 @@
-import datetime
-import sqlite3
 import sys
-import time
-from functools import partial
-
-import requests
 from telebot import types
 
-from auxiliary_functions import duration_in_minutes
 from database import BotDb, CurrentHour
 import telebot
 

@@ -75,6 +75,18 @@ class BotDb:
         bot.send_message(chat_id, 'Database is created.')
         return self.conn.commit()
 
+    def get_task(self, task, chat_id):
+        """Выбирает таск от пользователя для проверки условия на добавление повтора в неделю"""
+        data = get_week_days_list()
+        placeholders = ', '.join('?' for _ in data)
+        query = f'SELECT task FROM tasks WHERE task = ? AND user_id = ? AND date IN ({placeholders})'
+        params = (task, chat_id) + tuple(data)
+        self.cursor.execute(query, params)
+        x = self.cursor.fetchone()
+        return x[0]
+
+
+
     def week_tasks(self, chat_id):
         """Задачи на текущую неделю"""
         today = datetime.today().date()
@@ -130,6 +142,10 @@ class BotDb:
         if date is None:
             sys.exit()
         data = [task, date, message.chat.id, 0, 0]
+        chek = self.cursor.execute(
+            'SELECT task FROM tasks WHERE task = ? AND date = ? AND user_id = ?', (data[0], data[1], data[2]))
+        if chek.fetchone():
+            raise ValueError
 
         self.cursor.execute('INSERT INTO tasks (task, date, user_id, elapsed_time, is_done) VALUES (?,?,?,?,?)', data)
 

@@ -81,18 +81,3 @@ def convert_to_datetime(message, date):
         error = 'Пожалуйста укажити дату так как это показано в примере, добавление задачи сброшено, начните сначала'
         bot.send_message(message.chat.id, error)
         #TODO закинуть эту фунцию с файл с добавочными и переделать добавление задачи
-
-
-
-if __name__ == '__main__':
-    print(get_week_days_dict())
-DAYS = {
-    'monday': 'ПН',
-    'tuesday': 'ВТ',
-    'wednesday': 'СР',
-    'thursday': 'ЧТ',
-    'friday': 'ПТ',
-    'saturday': 'СБ',
-    'sunday': 'ВС',
-}
-
