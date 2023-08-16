@@ -28,7 +28,7 @@ recurring_this_week = []
 @bot.message_handler(commands=['week'])
 def get_week_tasks(message):
     db = BotDb('dairy_db.sql')
-    week_tasks = db.week_tasks(message.chat.id)
+    week_tasks = db.get_week_tasks(message.chat.id)
     db.close()
     for el in week_tasks:
         bot.send_message(message.chat.id, f'задачу  {el[1]} нужно сделать {el[2]}\n')

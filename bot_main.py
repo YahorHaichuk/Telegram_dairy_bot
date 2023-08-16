@@ -21,7 +21,7 @@ class BotTG:
     def get_week_tasks(self, message):
         """Отправка в чат пользователю задач на текущую неделю"""
         self.db = BotDb('dairy_db.sql')
-        week_tasks = self.db.week_tasks(message.chat.id)
+        week_tasks = self.db.get_week_tasks(message.chat.id)
         self.db.close()
         for el in week_tasks:
             bot.send_message(message.chat.id, f'задачу  {el[1]} нужно сделать {el[2]}\n')

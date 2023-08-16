@@ -88,15 +88,13 @@ class BotDb:
         x = self.cursor.fetchone()
         return x[0]
 
-
-
-    def week_tasks(self, chat_id):
+    def get_week_tasks(self, chat_id):
         """Задачи на текущую неделю"""
         today = datetime.today().date()
         week = get_week_days_list()
         sunday = week[-1]
         self.cursor.execute(
-            f'SELECT * FROM tasks WHERE date BETWEEN ? AND ? AND user_id = ?',
+            f'SELECT * FROM tasks WHERE date BETWEEN ? AND ? AND user_id = ? AND is_done = 0',
             (str(today), (str(sunday)), chat_id)
         )
         return self.cursor.fetchall()
@@ -113,11 +111,8 @@ class BotDb:
             today_tasks.append(i[1])
 
         return today_tasks
-    def task_done(self, task):
-        """Меняет значение поля is_done в бд на 1"""
 
-
-    def month_tasks(self, chat_id):
+    def get_month_tasks(self, chat_id):
         """Задачи на текущий месяц"""
         today = datetime.today().date()
         month = str(today).split('-')
@@ -126,7 +121,7 @@ class BotDb:
         result = '-'.join(month)
         month_object = datetime.strptime(result, "%Y-%m-%d")
         self.cursor.execute(
-            f'SELECT * FROM tasks WHERE date BETWEEN ? AND ? AND user_id = ?',
+            f'SELECT * FROM tasks WHERE date BETWEEN ? AND ? AND user_id = ? AND is_done = 0',
             (str(today), (str(month_object)), chat_id)
         )
         return self.cursor.fetchall()

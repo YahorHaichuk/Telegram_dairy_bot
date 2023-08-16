@@ -26,10 +26,11 @@ recurring_this_week = []
 @bot.message_handler(commands=['week'])
 def get_week_tasks(message):
     db = BotDb('dairy_db.sql')
-    week_tasks = db.week_tasks(message.chat.id)
+    week_tasks = db.get_week_tasks(message.chat.id)
     db.close()
+    bot.send_message(message.chat.id, 'на этой неделе вам нужно сделать следующик задачи:')
     for el in week_tasks:
-        bot.send_message(message.chat.id, f'задачу  {el[1]} нужно сделать {el[2]}\n')
+        bot.send_message(message.chat.id, f'{el[1]}')
 
 
 @bot.message_handler(commands=['day'])
@@ -37,17 +38,20 @@ def get_day_tasks(message):
     db = BotDb('dairy_db.sql')
     day_tasks = db.get_day_tasks(message.chat.id)
     db.close()
+    bot.send_message(message.chat.id, 'Сеодня вам нужно сделать следующик задачи')
     for el in day_tasks:
-        bot.send_message(message.chat.id, f'задачу  {el[1]} нужно сделать {el[2]}\n')
+        bot.send_message(message.chat.id, f'{el}')
 
 
 @bot.message_handler(commands=['month'])
 def get_month_tasks(message):
     db = BotDb('dairy_db.sql')
-    day_tasks = db.month_tasks(message.chat.id)
+    day_tasks = db.get_month_tasks(message.chat.id)
     db.close()
     for el in day_tasks:
-        bot.send_message(message.chat.id, f'задачу  {el[1]} нужно сделать {el[2]}\n')
+        bot.send_message(message.chat.id, f'{el[1]}')
+        bot.send_message(message.chat.id, f'дата выполнения этой задачи {el[2]}')
+
 
 
 
