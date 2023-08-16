@@ -206,6 +206,13 @@ def done_today_callback(call):
     bot.send_message(call.message.chat.id,
                      f''' Ведите время в которое вы начали выполнять задачу {call.data[:]}\nв формате "ЧЧ:ММ"''')
 
+    hours = ['06:00', '07:00', '08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00',
+             '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00', '23:00', ]
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    bot.send_message(call.message.chat.id, "Выберите тип алкоголя", reply_markup=markup)
+    markup.add(*hours)
+    bot.send_message(call.message.chat.id, "Вы можете вписать дату или выбрать кнопкой", reply_markup=markup)
+
     bot.register_next_step_handler(call.message, add_start_time, task_time_add=task_time_add)
 
 
@@ -239,6 +246,13 @@ def add_start_time(message, task_time_add):
     start_time = message.text
 
     bot.send_message(message.chat.id, f'Ведите время в которое вы закончили выполнять задачу\n{task_time_add} в формате "ЧЧ:ММ"')
+    #TODO Сделать кнопки часов
+    hours = ['06:00', '07:00', '08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00',
+             '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00', '23:00', ]
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    bot.send_message(message.chat.id, "Выберите тип алкоголя", reply_markup=markup)
+    markup.add(*hours)
+    bot.send_message(message.chat.id, "Вы можете вписать дату или выбрать кнопкой", reply_markup=markup)
 
     bot.register_next_step_handler(message, add_end_time, task_time_add=task_time_add, start_time=start_time)
 
