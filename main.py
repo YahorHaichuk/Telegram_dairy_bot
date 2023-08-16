@@ -17,7 +17,6 @@ days_of_week = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturda
 days = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']
 start_time_task = None
 end_time_task = None
-text = None
 user_today_tasks = None
 current_task_time_add = None
 current_task_days_add = None
@@ -36,7 +35,7 @@ def get_week_tasks(message):
 @bot.message_handler(commands=['day'])
 def get_day_tasks(message):
     db = BotDb('dairy_db.sql')
-    day_tasks = db.day_tasks(message.chat.id)
+    day_tasks = db.get_day_tasks(message.chat.id)
     db.close()
     for el in day_tasks:
         bot.send_message(message.chat.id, f'задачу  {el[1]} нужно сделать {el[2]}\n')
@@ -51,21 +50,7 @@ def get_month_tasks(message):
         bot.send_message(message.chat.id, f'задачу  {el[1]} нужно сделать {el[2]}\n')
 
 
-@bot.message_handler(commands=['add_task'])
-def add_task(message):
-    """Добавление кнопок повторения задач"""
-    markup = types.InlineKeyboardMarkup(row_width=2)
-    button_week = types.InlineKeyboardButton('Неделя', callback_data='week')
-    button_month = types.InlineKeyboardButton('Месяц', callback_data='month')
-    no_repeatable = types.InlineKeyboardButton('Без повторения', callback_data='only_one')
-    markup.add(button_week, button_month, no_repeatable)
-    bot.send_message(message.chat.id, 'Выберите период повторения:', reply_markup=markup)
-    bot.register_next_step_handler(message, start)
 
-
-@bot.callback_query_handler(
-    func=lambda call: call.data.split()[0] == text and call.data.split()[1] in days_of_week
-)
 def cycle_month(message):
     task = 0
 
@@ -120,20 +105,19 @@ def start(message):
 
 
 def task(message):
-    global text
-    text = f'*{message.text}*'
+    task_text = f'*{message.text}*'
     bot.send_message(message.chat.id, 'Напишите дату в формате:  2023-06-30')
 
     #TODO сделать кнопки
-    bot.register_next_step_handler(message, task_date)
+    bot.register_next_step_handler(message, task_date, task_text=task_text)
 
 
-def task_date(message):
+def task_date(message, task_text):
     db = BotDb('dairy_db.sql')
     try:
-        db.task_date(text, message.text, message)
+        db.task_date(task_text, message.text, message)
         markup = types.InlineKeyboardMarkup(row_width=2)
-        button_week = types.InlineKeyboardButton('Неделя', callback_data=f'{text} week')
+        button_week = types.InlineKeyboardButton('Неделя', callback_data=f'{task_text} week')
         button_month = types.InlineKeyboardButton('Месяц', callback_data='month')
         no_repeatable = types.InlineKeyboardButton('Без повторения', callback_data='only_one')
         markup.add(button_week, button_month, no_repeatable)
@@ -172,32 +156,31 @@ def morning_send(message):
 @bot.message_handler(commands=['done_today_tasks'])
 def done_today_tasks(message):
     db = BotDb('dairy_db.sql')
-    day_tasks = db.day_tasks(message.chat.id)
+    day_tasks = db.get_day_tasks(message.chat.id)
     db.close()
 
-    today_tasks = []
     buttons = []
 
     markup = types.InlineKeyboardMarkup()
 
-    for t in day_tasks:
-        today_tasks.append(t[1])
-
-    for i in today_tasks:
+    for i in day_tasks:
         buttons.append(types.InlineKeyboardButton(text=i, callback_data=i))
 
     markup.add(*buttons)
     bot.send_message(message.chat.id, 'нажмите на выполненную задачу', reply_markup=markup)
-    global user_today_tasks
-    user_today_tasks = today_tasks
+    # global user_today_tasks
+    # user_today_tasks = day_tasks
 
 
 @bot.callback_query_handler(func=lambda call: True)
-def all_callbacks_handler(call):#
-    if call.data is not None and user_today_tasks is not None and call.data in user_today_tasks:
+def all_callbacks_handler(call):
+    today_tasks = BotDb('dairy_db.sql').get_day_tasks(call.message.chat.id)
+    task_text = (BotDb('dairy_db.sql').get_task(call.data.split(' * ')[0], call.message.chat.id))
+    if (
+            call.data is not None and today_tasks is not None and call.data in today_tasks):  # выполнение сегодняшней задачи
         done_today_callback(call)
-    elif len(call.data.split('*')) > 2 and call.data.split('*')[1] == text[1:-1] and call.data.split('*')[2] == ' week':
-        callback_recurring_tasks_many_words_handler(call)
+    elif len(call.data.split('*')) > 2 and call.data.split('*')[1] == task_text and call.data.split('*')[2] == ' week':
+        callback_recurring_tasks_many_words_handler(call) #период повторения неделя
 
     elif call.data == 'only_one':# добавляет задачу без довторения
         bot.send_message(call.message.chat.id, 'Задача добавлена')
@@ -225,12 +208,11 @@ def all_callbacks_handler(call):#
 )
 def done_today_callback(call):
     """Обработчик колбэка на выполнение сегодняшней задачи."""
-    global current_task_time_add
-    current_task_time_add = call.data[:]
+    task_time_add = call.data[:]
     bot.send_message(call.message.chat.id,
                      f''' Ведите время в которое вы начали выполнять задачу {call.data[:]}\nв формате "ЧЧ:ММ"''')
 
-    bot.register_next_step_handler(call.message, add_start_time)
+    bot.register_next_step_handler(call.message, add_start_time, task_time_add=task_time_add)
 
 
 def callback_recurring_tasks_many_words_handler(call):
@@ -259,25 +241,25 @@ def recurring_tasks_week(call):
     db.recurring_tasks_week(task, day, call.message.chat.id)
 
 
-def add_start_time(message):
-    global start_time_task
-    start_time_task = message.text
+def add_start_time(message, task_time_add):
+    start_time = message.text
     t = current_task_time_add
 
     bot.send_message(message.chat.id, f'Ведите время в которое вы закончили выполнять задачу\n{t} в формате "ЧЧ:ММ"')
 
-    bot.register_next_step_handler(message, add_end_time)
+    bot.register_next_step_handler(message, add_end_time, task_time_add=task_time_add, start_time=start_time)
 
 
-def add_end_time(message):
+def add_end_time(message, task_time_add, start_time):
     db = BotDb('dairy_db.sql')
     end_time = message.text
-    minutes = duration_in_minutes(start_time_task, end_time)
-    db.spent_time_task_add(current_task_time_add, minutes)
+    minutes = duration_in_minutes(start_time, end_time)
+    db.spent_time_task_add(task_time_add, minutes)
+
     db.close()
 
     bot.send_message(message.chat.id,
-                     f'на задачу {current_task_time_add} вы потратили {minutes} минут.\nрезультат сохранен.')
+                     f'на задачу {task_time_add} вы потратили {minutes} минут.\nрезультат сохранен.')
 
 
 def send_time():

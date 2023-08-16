@@ -77,10 +77,13 @@ class BotDb:
 
     def get_task(self, task, chat_id):
         """Выбирает таск от пользователя для проверки условия на добавление повтора в неделю"""
+        task = task.split('* ')
+        if task[0][0] == '*':
+            task[0] = task[0][1:]
         data = get_week_days_list()
         placeholders = ', '.join('?' for _ in data)
         query = f'SELECT task FROM tasks WHERE task = ? AND user_id = ? AND date IN ({placeholders})'
-        params = (task, chat_id) + tuple(data)
+        params = (task[0], chat_id) + tuple(data)
         self.cursor.execute(query, params)
         x = self.cursor.fetchone()
         return x[0]
@@ -98,13 +101,21 @@ class BotDb:
         )
         return self.cursor.fetchall()
 
-    def day_tasks(self, chat_id):
+    def get_day_tasks(self, chat_id):
         """Задачи на текущий день"""
         today = datetime.today().date()
         self.cursor.execute(
-            f'SELECT * FROM tasks WHERE date = ? AND user_id = ?', (str(today), chat_id)
+            f'SELECT * FROM tasks WHERE date = ? AND is_done = 0 AND user_id = ?', (str(today), chat_id)
         )
-        return self.cursor.fetchall()
+        db_today_tasks = self.cursor.fetchall()
+        today_tasks = []
+        for i in db_today_tasks:
+            today_tasks.append(i[1])
+
+        return today_tasks
+    def task_done(self, task):
+        """Меняет значение поля is_done в бд на 1"""
+
 
     def month_tasks(self, chat_id):
         """Задачи на текущий месяц"""
@@ -188,7 +199,7 @@ class BotDb:
         except KeyError:
             bot.send_message(user_id, 'Выберите день от сегодняшнего и позже')
 
-        return self.conn.commit()
+            return self.conn.commit()
 
     def get_task_editing(self, message, editing_task):
         """Выбираем задачу для редактирования"""

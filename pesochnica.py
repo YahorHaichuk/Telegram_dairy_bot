@@ -1,17 +1,21 @@
-import telebot
+@bot.message_handler(commands=['done_today_tasks'])
+def done_today_tasks(message):
+    db = BotDb('dairy_db.sql')
+    day_tasks = db.day_tasks(message.chat.id)
+    db.close()
 
-TOKEN = '6193050640:AAGxCsSYcN9ykAf6N29Z-bcLCYUFqQYJ7YQ'
-bot = telebot.TeleBot(TOKEN)
-@bot.message_handler(commands=['start'])
-def start(message):
-    f = [1, 2, 4]
-    bot.send_message(message.chat.id, f' {f}Привет! Введите текст:')
+    today_tasks = []
+    buttons = []
 
-    # Регистрируем следующий шаг для ожидания ввода текста от пользователя
-    bot.register_next_step_handler(message, lambda msg: process_text_input(msg, f, message.chat.id))
+    markup = types.InlineKeyboardMarkup()
 
-def process_text_input(message, f, chat_id):
-    user_text = message.text
-    bot.send_message(chat_id, f'Вы ввели:  {f} {user_text}')
+    for t in day_tasks:
+        today_tasks.append(t[1])
 
-bot.polling()
+    for i in today_tasks:
+        buttons.append(types.InlineKeyboardButton(text=i, callback_data=i))
+
+    markup.add(*buttons)
+    bot.send_message(message.chat.id, 'нажмите на выполненную задачу', reply_markup=markup)
+    global user_today_tasks
+    user_today_tasks = today_tasks
