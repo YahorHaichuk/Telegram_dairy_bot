@@ -23,7 +23,7 @@ def morning_send():
 
     for user in users:
 
-        day_tasks = db.day_tasks(user[0])
+        day_tasks = db.get_day_tasks(user[0])
 
         for el in day_tasks:
             bot.send_message(user[0], f'задачу  {el[1]} нужно сделать {el[2]}\n')
@@ -187,6 +187,7 @@ class BotDb:
             if days in week_days.keys() and not result:
                 self.cursor.execute('INSERT INTO tasks (task, date, user_id, elapsed_time, is_done) VALUES (?,?,?,?,?)',
                                     (task, week_days[days], user_id, 0, 0))
+                self.conn.commit()
                 bot.send_message(user_id, f'Задача {task} добавлена на день {days}')
             else:
                 bot.send_message(user_id, 'Вы уже выбрали этот день')

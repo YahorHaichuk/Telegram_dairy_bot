@@ -15,11 +15,6 @@ bot = telebot.TeleBot(TOKEN)
 
 days_of_week = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
 days = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']
-start_time_task = None
-end_time_task = None
-user_today_tasks = None
-current_task_time_add = None
-current_task_days_add = None
 recurring_this_week = []
 
 
@@ -31,6 +26,7 @@ def get_week_tasks(message):
     bot.send_message(message.chat.id, 'на этой неделе вам нужно сделать следующик задачи:')
     for el in week_tasks:
         bot.send_message(message.chat.id, f'{el[1]}')
+        bot.send_message(message.chat.id, f'дата выполнения этой задачи {el[2]}')
 
 
 @bot.message_handler(commands=['day'])
@@ -113,6 +109,12 @@ def task(message):
     bot.send_message(message.chat.id, 'Напишите дату в формате:  2023-06-30')
 
     #TODO сделать кнопки
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    buttons = []
+    for i in get_week_days_list():
+        buttons.append(types.KeyboardButton(i))
+    markup.add(*buttons)
+    bot.send_message(message.chat.id, "Вы можете вписать дату или выбрать кнопкой", reply_markup=markup)
     bot.register_next_step_handler(message, task_date, task_text=task_text)
 
 
@@ -140,22 +142,11 @@ def morning_send(message):
 
     for user in users:
 
-        day_tasks = db.day_tasks(user[0])
+        day_tasks = db.get_day_tasks(user[0])
 
         for el in day_tasks:
             bot.send_message(user[0], f'задачу  {el[1]} нужно сделать {el[2]}\n')
             x = 0
-
-# def return_day_task_list():
-#     db = BotDb('dairy_db.sql')
-#     day_tasks = db.day_tasks(message.chat.id)
-#     db.close()
-#
-#     today_tasks = []
-#     buttons = []
-#     for t in day_tasks:
-#         today_tasks.append(t[1])
-
 
 @bot.message_handler(commands=['done_today_tasks'])
 def done_today_tasks(message):
@@ -172,8 +163,6 @@ def done_today_tasks(message):
 
     markup.add(*buttons)
     bot.send_message(message.chat.id, 'нажмите на выполненную задачу', reply_markup=markup)
-    # global user_today_tasks
-    # user_today_tasks = day_tasks
 
 
 @bot.callback_query_handler(func=lambda call: True)
@@ -208,7 +197,8 @@ def all_callbacks_handler(call):
 
 
 @bot.callback_query_handler(
-    func=lambda call: call.data is not None and user_today_tasks is not None and call.data in user_today_tasks
+    func=lambda call: (call.data is not None and BotDb('dairy_db.sql').get_day_tasks(call.message.chat.id) is not None
+                       and call.data in BotDb('dairy_db.sql').get_day_tasks(call.message.chat.id))
 )
 def done_today_callback(call):
     """Обработчик колбэка на выполнение сегодняшней задачи."""
@@ -247,9 +237,8 @@ def recurring_tasks_week(call):
 
 def add_start_time(message, task_time_add):
     start_time = message.text
-    t = current_task_time_add
 
-    bot.send_message(message.chat.id, f'Ведите время в которое вы закончили выполнять задачу\n{t} в формате "ЧЧ:ММ"')
+    bot.send_message(message.chat.id, f'Ведите время в которое вы закончили выполнять задачу\n{task_time_add} в формате "ЧЧ:ММ"')
 
     bot.register_next_step_handler(message, add_end_time, task_time_add=task_time_add, start_time=start_time)
 
