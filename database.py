@@ -8,7 +8,8 @@ from threading import Thread
 import telebot
 from telebot import types
 
-from auxiliary_functions import get_week_days_list, convert_to_datetime, get_week_days_dict
+from auxiliary_functions import get_week_days_list, convert_to_datetime, get_week_days_dict, days_until_end_of_month
+from pesochnica import days_until_end_of_month_list
 
 TOKEN = '6193050640:AAGxCsSYcN9ykAf6N29Z-bcLCYUFqQYJ7YQ'
 bot = telebot.TeleBot(TOKEN)
@@ -75,12 +76,25 @@ class BotDb:
         bot.send_message(chat_id, 'Database is created.')
         return self.conn.commit()
 
-    def get_task(self, task, chat_id):
+    def get_task_range_week(self, task, chat_id):
         """Выбирает таск от пользователя для проверки условия на добавление повтора в неделю"""
         task = task.split('* ')
         if task[0][0] == '*':
             task[0] = task[0][1:]
         data = get_week_days_list()
+        placeholders = ', '.join('?' for _ in data)
+        query = f'SELECT task FROM tasks WHERE task = ? AND user_id = ? AND date IN ({placeholders})'
+        params = (task[0], chat_id) + tuple(data)
+        self.cursor.execute(query, params)
+        x = self.cursor.fetchone()
+        return x[0]
+
+    def get_task_range_month(self, task, chat_id):
+        """Выбирает таск от пользователя для проверки условия на добавление повтора в неделю"""
+        task = task.split('* ')
+        if task[0][0] == '*':
+            task[0] = task[0][1:]
+        data = days_until_end_of_month()
         placeholders = ', '.join('?' for _ in data)
         query = f'SELECT task FROM tasks WHERE task = ? AND user_id = ? AND date IN ({placeholders})'
         params = (task[0], chat_id) + tuple(data)
@@ -197,6 +211,27 @@ class BotDb:
 
             return self.conn.commit()
 
+    def recurring_tasks_month(self, task, day, user_id):
+        """Добавление повторяюзейся задачи на выбранный день недели"""
+        month_days = days_until_end_of_month()
+        try:
+            task_in_day = self.cursor.execute('SELECT task, date FROM tasks WHERE task = ? AND date = ?', (task, day))
+            result = task_in_day.fetchone()
+
+            if day in month_days and not result:
+                self.cursor.execute('INSERT INTO tasks (task, date, user_id, elapsed_time, is_done) VALUES (?,?,?,?,?)',
+                                    (task, day, user_id, 0, 0))
+                self.conn.commit()
+                bot.send_message(user_id, f'Задача {task} добавлена на день {day}')
+            else:
+                bot.send_message(user_id, 'Вы уже выбрали этот день')
+
+        except KeyError:
+            bot.send_message(user_id, 'Выберите день от сегодняшнего и позже')
+
+            return self.conn.commit()
+
+
     def get_task_editing(self, message, editing_task):
         """Выбираем задачу для редактирования"""
         today = datetime.today().date()
@@ -206,7 +241,8 @@ class BotDb:
             f"""SELECT task, date FROM tasks WHERE task = ? AND user_id = ? AND date BETWEEN ? AND ?""",
             (editing_task, message.chat.id, str(today), str(sunday))
         )
-        return self.cursor.fetchall()
+        x = self.cursor.fetchall()
+        return x
 
     def update_task(self, updated_text, editing_task, editing_date):
         self.cursor.execute(

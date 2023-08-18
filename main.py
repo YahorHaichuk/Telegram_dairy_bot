@@ -1,14 +1,14 @@
 import datetime
-import sqlite3
-import sys
 import time
 
 import requests
 from telebot import types
 
-from auxiliary_functions import duration_in_minutes, get_week_days_list
+from auxiliary_functions import duration_in_minutes, get_week_days_list, days_until_end_of_month
 from database import BotDb, CurrentHour
 import telebot
+
+from pesochnica import days_until_end_of_month_list
 
 TOKEN = '6193050640:AAGxCsSYcN9ykAf6N29Z-bcLCYUFqQYJ7YQ'
 bot = telebot.TeleBot(TOKEN)
@@ -49,10 +49,21 @@ def get_month_tasks(message):
         bot.send_message(message.chat.id, f'дата выполнения этой задачи {el[2]}')
 
 
+def cycle_month(call):
+    days_list = days_until_end_of_month_list()
+    current_task = call.data.split('*')[1:2][0]
 
+    markup = types.InlineKeyboardMarkup(row_width=5)
+    buttons = [types.InlineKeyboardButton(day, callback_data=f'{current_task} * {day}') for day in days_list]
+    markup.add(*buttons)
+    text = '''Выберите дни недели в которые будет повторятся ваша задача от сегодняшнего дня и до конца месяца.\n
+               Вы находитесь в режиме выбора дней повтора задач на текущий месяц.\n
+               '''
+    bot.edit_message_text(text, call.message.chat.id, call.message.message_id, reply_markup=markup)
+    #сделать отдельную фунцкию гет из датабазы по примеру недели
+    # сделать добавление по калбэку по принципу недельного добавления
 
-def cycle_month(message):
-    task = 0
+    pass
 
 
 @bot.message_handler(commands=['task_edit'])
@@ -71,7 +82,7 @@ def get_editing_task_db(message):
     markup = types.InlineKeyboardMarkup()
 
     for i in result:
-        buttons.append(types.InlineKeyboardButton(f'{i[1]}', callback_data=f'{i[0]} * {i[1]}'))
+        buttons.append(types.InlineKeyboardButton(f'{i[1]}', callback_data=f' *task_edit* {i[0]} * {i[1]}'))
 
     markup.add(*buttons)
     text = f'''Редактируемая задача {result[0][0]} обнаруженв ы следушмщих днях на ближайжую неделю
@@ -124,7 +135,7 @@ def task_date(message, task_text):
         db.task_date(task_text, message.text, message)
         markup = types.InlineKeyboardMarkup(row_width=2)
         button_week = types.InlineKeyboardButton('Неделя', callback_data=f'{task_text} week')
-        button_month = types.InlineKeyboardButton('Месяц', callback_data='month')
+        button_month = types.InlineKeyboardButton('Месяц', callback_data=f'{task_text} month')
         no_repeatable = types.InlineKeyboardButton('Без повторения', callback_data='only_one')
         markup.add(button_week, button_month, no_repeatable)
 
@@ -167,33 +178,80 @@ def done_today_tasks(message):
 
 @bot.callback_query_handler(func=lambda call: True)
 def all_callbacks_handler(call):
+    #x = call.data.split(' * ')[0], call.message.chat.id
+    #y = call.data.split('*')
+    #xx = call.data.split('*')[1:][0].strip()
+    #xxx = call.data.split('*')[1:][1].strip()
+    #xxxx = call.data.split('*')[1:][2].strip()
+    #zzz = BotDb('dairy_db.sql').get_task_editing(call.message, call.data.lstrip('"(').rstrip(')"').split(' * ')[0])
+    x = call.data.split('*')[1:][0]
+    xx = len(call.data.split('*')[:1])
+    xxx = call.data.split('*')
+    pp = len(call.data.split('*'))
+    #oooo = call.data.split('*')[2].strip()
+    task_text_range_week = None
+    task_text_range_month = None
     today_tasks = BotDb('dairy_db.sql').get_day_tasks(call.message.chat.id)
-    task_text = (BotDb('dairy_db.sql').get_task(call.data.split(' * ')[0], call.message.chat.id))
+    try:
+        if len(call.data.split('*')) > 2 and call.data.split('*')[2].strip() == 'week':
+            task_text_range_week = (BotDb('dairy_db.sql').get_task_range_week(call.data.split('*')[1].strip(), call.message.chat.id))
+    except TypeError:
+        task_text_range_week = None
+
+    try:
+        if len(call.data.split('*')) > 2 and call.data.split('*')[2].strip() == 'month':
+            task_text_range_month = (
+                BotDb('dairy_db.sql').get_task_range_month(call.data.split('*')[1].strip(), call.message.chat.id))
+    except TypeError:
+        task_text_range_month = None
+
     if (
             call.data is not None and today_tasks is not None and call.data in today_tasks):  # выполнение сегодняшней задачи
         done_today_callback(call)
-    elif len(call.data.split('*')) > 2 and call.data.split('*')[1] == task_text and call.data.split('*')[2] == ' week':
-        callback_recurring_tasks_many_words_handler(call) #период повторения неделя
+    if len(call.data.split('*')) == 3:
+        if (task_text_range_week is not None and len(call.data.split('*')) > 2
+                and call.data.split('*')[1] == task_text_range_week
+                and call.data.split('*')[2] == ' week'):
+            callback_recurring_tasks_many_words_handler(call)  # период повторения неделя
+    if len(call.data.split('*')) > 2:
+        if (task_text_range_month is not None and
+              call.data.split('*')[1] == task_text_range_month and call.data.split('*')[2] == ' month'):
+            cycle_month(call)  #период повторения месяц
 
-    elif call.data == 'only_one':# добавляет задачу без довторения
+    if call.data.split('*')[1].strip() in days:
+        if (BotDb('dairy_db.sql').get_task_range_week(#вызвывает функцию записи повторных задач на неделю
+                call.data.split(' * ')[0], call.message.chat.id)) and (
+                call.data.split('*')[1].replace(" ", "") in days):
+            recurring_tasks_week(call)
+
+    if call.data == 'only_one':# добавляет задачу без довторения
         bot.send_message(call.message.chat.id, 'Задача добавлена')
-    #вызывет функцию редактирования задачи
-    elif ((call.data.lstrip('"(').rstrip(')"').split(' * ')[0], call.data.lstrip('"(').rstrip(')"').split(' * ')[1]) in
-          BotDb('dairy_db.sql').get_task_editing(call.message, call.data.lstrip('"(').rstrip(')"').split(' * ')[0])):
-        editing_task = call.data.lstrip('"(').rstrip(')"').split(' * ')[0]
-        editing_date = call.data.lstrip('"(').rstrip(')"').split(' * ')[1]
-        update_info(call.message, editing_task, editing_date)
+    # вызвывает функцию записи повторных задач на месяц
+    if (BotDb('dairy_db.sql').get_task_range_month(call.data.split(' * ')[0], call.message.chat.id)) is not None and (
+            len(call.data.split('*')[1][1:]) > 4 and call.data.split('*')[1][1:3] in days):
+        month_cycle_add(call)
 
-    elif (BotDb('dairy_db.sql').get_task(
-            call.data.split(' * ')[0], call.message.chat.id)) and (
-            call.data.split('*')[1].replace(" ", "") in days):
-        recurring_tasks_week(call)
+    # вызывет функцию редактирования задачи
+    if (len(call.data.split('*')) >= 3 and call.data.split('*')[1:][0] == 'task_edit'):
+        if ((call.data.split('*')[1:][1].strip(), call.data.split('*')[1:][2].strip())
+                in BotDb('dairy_db.sql').get_task_editing(call.message, call.data.split('*')[1:][1].strip())):
+            editing_task = call.data.split('*')[1:][1].strip()
+            editing_date = call.data.split('*')[1:][2].strip()
+            update_info(call.message, editing_task, editing_date)
 
 
     # elif call.data.split(' * ')[0] == text[1:-1] and call.data.split('*')[1].replace(" ", "") in days:
     #     recurring_tasks_week(call)
 
 
+def month_cycle_add(call):
+    db = BotDb('dairy_db.sql')
+    current_year = str(datetime.datetime.now().year) + '-'
+    day = call.data.split('*')[1][4:]
+    current_date = current_year + day
+    task = call.data.split('*')[0].strip()
+
+    db.recurring_tasks_month(task, current_date, call.message.chat.id)
 
 
 @bot.callback_query_handler(
@@ -233,10 +291,8 @@ def callback_recurring_tasks_many_words_handler(call):
 
 def recurring_tasks_week(call):
     db = BotDb('dairy_db.sql')
-    global recurring_this_week
     day = call.data.split('*')[1].replace(" ", "")
-    if day not in recurring_this_week:
-        recurring_this_week.append(day)
+
     task = call.data.split('*')[0].strip()
 
     db.recurring_tasks_week(task, day, call.message.chat.id)
@@ -246,7 +302,6 @@ def add_start_time(message, task_time_add):
     start_time = message.text
 
     bot.send_message(message.chat.id, f'Ведите время в которое вы закончили выполнять задачу\n{task_time_add} в формате "ЧЧ:ММ"')
-    #TODO Сделать кнопки часов
     hours = ['06:00', '07:00', '08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00',
              '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00', '23:00', ]
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)

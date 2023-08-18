@@ -1,10 +1,6 @@
-import sys
 import datetime
 from datetime import timedelta
 import telebot
-import sqlite3
-import calendar
-import locale
 
 TOKEN = '6193050640:AAGxCsSYcN9ykAf6N29Z-bcLCYUFqQYJ7YQ'
 
@@ -81,3 +77,22 @@ def convert_to_datetime(message, date):
         error = 'Пожалуйста укажити дату так как это показано в примере, добавление задачи сброшено, начните сначала'
         bot.send_message(message.chat.id, error)
         #TODO закинуть эту фунцию с файл с добавочными и переделать добавление задачи
+
+
+def days_until_end_of_month():
+    """Получаем все оставшиеся дни текущего месяца начиная с сегодня в виде списка"""
+    today = datetime.datetime.today()
+    year = today.year
+    month = today.month
+    next_month = month + 1 if month < 12 else 1
+    next_year = year if month < 12 else year + 1
+    first_day_next_month = datetime.datetime(next_year, next_month, 1)
+    last_day_of_month = first_day_next_month - timedelta(days=1)
+
+    remaining_days = (last_day_of_month - today).days + 1
+    days_list = [today + timedelta(days=i) for i in range(1, remaining_days + 1)]
+    x = []
+    for d in days_list:
+        x.append(d.strftime("%Y-%m-%d"))
+
+    return x
