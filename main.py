@@ -220,7 +220,9 @@ def all_callbacks_handler(call):
 
 
 
-    if call.data.split('*')[1].strip() in days:
+
+
+    if len(call.data.split('*')) > 1 and call.data.split('*')[1].strip() in days:
         if (BotDb('dairy_db.sql').get_task_range_week(#вызвывает функцию записи повторных задач на неделю
                 call.data.split('*')[0].strip(), call.message.chat.id)) and (
                 call.data.split('*')[1].strip() in days):
