@@ -91,7 +91,7 @@ def days_until_end_of_month():
 
     remaining_days = (last_day_of_month - today).days + 1
     days_list = [today + timedelta(days=i) for i in range(1, remaining_days + 1)]
-    x = []
+    x = [today.strftime("%Y-%m-%d")]
     for d in days_list:
         x.append(d.strftime("%Y-%m-%d"))
 

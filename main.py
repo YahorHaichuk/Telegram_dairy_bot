@@ -54,7 +54,7 @@ def cycle_month(call):
     current_task = call.data.split('*')[1:2][0]
 
     markup = types.InlineKeyboardMarkup(row_width=5)
-    buttons = [types.InlineKeyboardButton(day, callback_data=f'{current_task} * {day}') for day in days_list]
+    buttons = [types.InlineKeyboardButton(day, callback_data=f'{current_task} * {day} * month_daily') for day in days_list]
     markup.add(*buttons)
     text = '''Выберите дни недели в которые будет повторятся ваша задача от сегодняшнего дня и до конца месяца.\n
                Вы находитесь в режиме выбора дней повтора задач на текущий месяц.\n
@@ -138,7 +138,7 @@ def task_date(message, task_text):
         button_month = types.InlineKeyboardButton('Месяц', callback_data=f'{task_text} month')
         no_repeatable = types.InlineKeyboardButton('Без повторения', callback_data='only_one')
         markup.add(button_week, button_month, no_repeatable)
-
+        bot.send_message(message.chat.id, 'добавлено')
         bot.send_message(message.chat.id, 'Выберите период повторения:', reply_markup=markup)
     except ValueError:
         bot.send_message(message.chat.id, 'Запись уже существует')
@@ -178,17 +178,9 @@ def done_today_tasks(message):
 
 @bot.callback_query_handler(func=lambda call: True)
 def all_callbacks_handler(call):
-    #x = call.data.split(' * ')[0], call.message.chat.id
-    #y = call.data.split('*')
-    #xx = call.data.split('*')[1:][0].strip()
-    #xxx = call.data.split('*')[1:][1].strip()
-    #xxxx = call.data.split('*')[1:][2].strip()
-    #zzz = BotDb('dairy_db.sql').get_task_editing(call.message, call.data.lstrip('"(').rstrip(')"').split(' * ')[0])
-    x = call.data.split('*')[1:][0]
-    xx = len(call.data.split('*')[:1])
-    xxx = call.data.split('*')
+    p = call.data.split('*')
     pp = len(call.data.split('*'))
-    #oooo = call.data.split('*')[2].strip()
+    #x = call.data.split('*')[2].strip()
     task_text_range_week = None
     task_text_range_month = None
     today_tasks = BotDb('dairy_db.sql').get_day_tasks(call.message.chat.id)
@@ -198,10 +190,17 @@ def all_callbacks_handler(call):
     except TypeError:
         task_text_range_week = None
 
-    try:
+    try: #Нажатие кнопки "месяц"
         if len(call.data.split('*')) > 2 and call.data.split('*')[2].strip() == 'month':
             task_text_range_month = (
                 BotDb('dairy_db.sql').get_task_range_month(call.data.split('*')[1].strip(), call.message.chat.id))
+    except TypeError:
+        task_text_range_month = None
+
+    try: #Нажатие кнопки "день месяца"
+        if len(call.data.split('*')) > 2 and call.data.split('*')[2].strip() == 'month_daily':
+            task_text_range_month = (
+                BotDb('dairy_db.sql').get_task_range_month(call.data.split('*')[0].strip(), call.message.chat.id))
     except TypeError:
         task_text_range_month = None
 
@@ -209,27 +208,28 @@ def all_callbacks_handler(call):
             call.data is not None and today_tasks is not None and call.data in today_tasks):  # выполнение сегодняшней задачи
         done_today_callback(call)
     if len(call.data.split('*')) == 3:
-        if (task_text_range_week is not None and len(call.data.split('*')) > 2
+        if (task_text_range_week is not None
                 and call.data.split('*')[1] == task_text_range_week
-                and call.data.split('*')[2] == ' week'):
+                and call.data.split('*')[2].strip() == 'week'):
             callback_recurring_tasks_many_words_handler(call)  # период повторения неделя
-    if len(call.data.split('*')) > 2:
+    if len(call.data.split('*')) == 3:
         if (task_text_range_month is not None and
-              call.data.split('*')[1] == task_text_range_month and call.data.split('*')[2] == ' month'):
+              call.data.split('*')[1] == task_text_range_month and call.data.split('*')[2].strip() == 'month'):
             cycle_month(call)  #период повторения месяц
 
     if call.data.split('*')[1].strip() in days:
         if (BotDb('dairy_db.sql').get_task_range_week(#вызвывает функцию записи повторных задач на неделю
-                call.data.split(' * ')[0], call.message.chat.id)) and (
-                call.data.split('*')[1].replace(" ", "") in days):
+                call.data.split('*')[0].strip(), call.message.chat.id)) and (
+                call.data.split('*')[1].strip() in days):
             recurring_tasks_week(call)
 
     if call.data == 'only_one':# добавляет задачу без довторения
         bot.send_message(call.message.chat.id, 'Задача добавлена')
     # вызвывает функцию записи повторных задач на месяц
-    if (BotDb('dairy_db.sql').get_task_range_month(call.data.split(' * ')[0], call.message.chat.id)) is not None and (
-            len(call.data.split('*')[1][1:]) > 4 and call.data.split('*')[1][1:3] in days):
-        month_cycle_add(call)
+    if len(call.data.split('*')) == 2 and call.data.split('*')[1].split() == 'month':
+        if (BotDb('dairy_db.sql').get_task_range_month(call.data.split('*')[1], call.message.chat.id)) is not None and (
+                len(call.data.split('*')[1][1:]) > 4 and call.data.split('*')[1][1:3] in days):
+            month_cycle_add(call)
 
     # вызывет функцию редактирования задачи
     if (len(call.data.split('*')) >= 3 and call.data.split('*')[1:][0] == 'task_edit'):

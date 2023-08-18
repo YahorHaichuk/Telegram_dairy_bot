@@ -168,7 +168,7 @@ class BotDb:
             raise ValueError
 
         self.cursor.execute('INSERT INTO tasks (task, date, user_id, elapsed_time, is_done) VALUES (?,?,?,?,?)', data)
-
+        self.conn.commit()
         return self.conn.commit()
 
     def get_all_users(self):
