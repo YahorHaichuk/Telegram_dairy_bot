@@ -9,7 +9,7 @@ from database import BotDb
 import telebot
 
 from messages_sender import AutoSendMessage, CurrentHour
-from pesochnica import days_until_end_of_month_list
+from auxiliary_functions import days_until_end_of_month_list
 
 TOKEN = '6193050640:AAGxCsSYcN9ykAf6N29Z-bcLCYUFqQYJ7YQ'
 bot = telebot.TeleBot(TOKEN)

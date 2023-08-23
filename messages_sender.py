@@ -15,35 +15,34 @@ class CurrentHour(Thread):
         timer = datetime.now()
         hour = timer.hour
         while True:
-            if hour == 14:
+            if hour == 8:
                 send_message = AutoSendMessage()
                 send_message.morning_send()
-                time.sleep(30)
+                time.sleep(3600)
                 continue
 
-            if hour == 12:
+            elif hour == 12:
                 send_message = AutoSendMessage()
                 send_message.noon_send()
                 time.sleep(3600)
                 continue
 
-            if hour == 18:
+            elif hour == 18:
                 send_message = AutoSendMessage()
                 send_message.evening_send()
                 time.sleep(3600)
                 continue
 
-            if hour == 14:
+            elif hour == 14:
                 send_message = AutoSendMessage()
                 send_message.day_end()
-                time.sleep(30)
+                time.sleep(3600)
                 continue
-            if hour == 23:
+            elif hour == 23:
                 source_db_path ='D:\DEVELOP\cats_dairy\dairy_db.sql'   #Путь к исходной базе данных
                 backup_folder = 'D:\DEVELOP\cats_dairy\db_backup'  #Путь к папке с резервными копиями
                 backup = BotDb('dairy_db.sql')
                 backup.create_back_up(source_db_path=source_db_path, backup_folder=backup_folder)
-
 
 
 class AutoSendMessage:
