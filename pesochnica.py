@@ -1,3 +1,4 @@
+import threading
 from datetime import datetime, timedelta
 import locale
 
@@ -36,3 +37,6 @@ def days_until_end_of_month_list():
         days_list.append(f"{day_name} {day.strftime('%m-%d')}")
 
     return days_list
+
+
+event = threading.Event()

@@ -1,0 +1,7 @@
+    raise ReadTimeout(e, request=request)
+requests.exceptions.ReadTimeout: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=25)
+
+
+вреся выполнения задачи можно сделать отрицательное, исправить эту оошибку
+
+если у пользователя нет задач то ему приходит пустоее сообщение, наполнить его текстом

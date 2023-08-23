@@ -5,9 +5,10 @@ import requests
 from telebot import types
 
 from auxiliary_functions import duration_in_minutes, get_week_days_list, days_until_end_of_month
-from database import BotDb, CurrentHour
+from database import BotDb
 import telebot
 
+from messages_sender import AutoSendMessage, CurrentHour
 from pesochnica import days_until_end_of_month_list
 
 TOKEN = '6193050640:AAGxCsSYcN9ykAf6N29Z-bcLCYUFqQYJ7YQ'
@@ -148,16 +149,8 @@ def task_date(message, task_text):
 @bot.message_handler(commands=['morning_send'])
 def morning_send(message):
     """копия метода из класса для русного вызова"""
-    db = BotDb('dairy_db.sql')
-    users = db.get_all_users()
-
-    for user in users:
-
-        day_tasks = db.get_day_tasks(user[0])
-
-        for el in day_tasks:
-            bot.send_message(user[0], f'задачу  {el[1]} нужно сделать {el[2]}\n')
-            x = 0
+    auto_send = AutoSendMessage()
+    auto_send.evening_send()
 
 @bot.message_handler(commands=['done_today_tasks'])
 def done_today_tasks(message):
@@ -273,7 +266,6 @@ def done_today_callback(call):
     hours = ['06:00', '07:00', '08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00',
              '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00', '23:00', ]
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    bot.send_message(call.message.chat.id, "Выберите тип алкоголя", reply_markup=markup)
     markup.add(*hours)
     bot.send_message(call.message.chat.id, "Вы можете вписать дату или выбрать кнопкой", reply_markup=markup)
 
@@ -311,7 +303,6 @@ def add_start_time(message, task_time_add):
     hours = ['06:00', '07:00', '08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00',
              '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00', '23:00', ]
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    bot.send_message(message.chat.id, "Выберите тип алкоголя", reply_markup=markup)
     markup.add(*hours)
     bot.send_message(message.chat.id, "Вы можете вписать дату или выбрать кнопкой", reply_markup=markup)
 

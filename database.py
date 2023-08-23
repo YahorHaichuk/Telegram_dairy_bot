@@ -1,15 +1,12 @@
 import calendar
 import sqlite3
 import sys
-import time
 from datetime import datetime
-from threading import Thread
 
 import telebot
-from telebot import types
+
 
 from auxiliary_functions import get_week_days_list, convert_to_datetime, get_week_days_dict, days_until_end_of_month
-from pesochnica import days_until_end_of_month_list
 
 TOKEN = '6193050640:AAGxCsSYcN9ykAf6N29Z-bcLCYUFqQYJ7YQ'
 bot = telebot.TeleBot(TOKEN)
@@ -18,45 +15,13 @@ recurring_days_list = []
 recurring_days_dict = {}
 
 
-def morning_send():
-    db = BotDb('dairy_db.sql')
-    users = db.get_all_users()
-
-    for user in users:
-
-        day_tasks = db.get_day_tasks(user[0])
-
-        for el in day_tasks:
-            bot.send_message(user[0], f'задачу  {el[1]} нужно сделать {el[2]}\n')
-
-
-def noon_send():
-    pass
-
-
-class CurrentHour(Thread):
-
-    def run(self):
-        timer = datetime.now()
-        hour = timer.hour
-        while True:
-            if hour == 17:
-                morning_send()
-                time.sleep(30)
-                continue
-
 
 class BotDb:
 
-    def __init__(self, db_name, edited_task_text=None, updated_text=None):
+    def __init__(self, db_name):
         """Инициализация соеденения с БД."""
         self.conn = sqlite3.connect(db_name)
         self.cursor = self.conn.cursor()
-        self.date = None
-        self.edited_task_text = edited_task_text
-        self.editing_date = None
-        self.editing_task = None
-        self.updated_text = updated_text
 
     def create_db(self, chat_id):
         """Создание базы данных. Таблица users и tasks"""
@@ -115,9 +80,15 @@ class BotDb:
 
     def get_day_tasks(self, chat_id):
         """Задачи на текущий день"""
+        if isinstance(chat_id, tuple):
+            user = chat_id[0]
+            user = str(user)
+        else:
+            user = str(chat_id)
+
         today = datetime.today().date()
         self.cursor.execute(
-            f'SELECT * FROM tasks WHERE date = ? AND is_done = 0 AND user_id = ?', (str(today), chat_id)
+            f'SELECT * FROM tasks WHERE date = ? AND is_done = 0 AND user_id = ?', (str(today), user)
         )
         db_today_tasks = self.cursor.fetchall()
         today_tasks = []
