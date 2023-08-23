@@ -38,6 +38,12 @@ class CurrentHour(Thread):
                 send_message.day_end()
                 time.sleep(30)
                 continue
+            if hour == 23:
+                source_db_path ='D:\DEVELOP\cats_dairy\dairy_db.sql'   #Путь к исходной базе данных
+                backup_folder = 'D:\DEVELOP\cats_dairy\db_backup'  #Путь к папке с резервными копиями
+                backup = BotDb('dairy_db.sql')
+                backup.create_back_up(source_db_path=source_db_path, backup_folder=backup_folder)
+
 
 
 class AutoSendMessage:

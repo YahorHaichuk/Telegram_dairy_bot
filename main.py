@@ -29,8 +29,16 @@ def get_week_tasks(message):
         bot.send_message(message.chat.id, f'{el[1]}')
         bot.send_message(message.chat.id, f'дата выполнения этой задачи {el[2]}')
 
+@bot.message_handler(commands=['backup'])
+#рУЧНОЙ ВЫЗОВ бжкапа бд
+def create_back_up(message):
+    source_db_path = 'D:\DEVELOP\cats_dairy\dairy_db.sql'  # Путь к исходной базе данных
+    backup_folder = 'D:\DEVELOP\cats_dairy\db_backup'  # Путь к папке с резервными копиями
+    backup = BotDb('dairy_db.sql')
+    backup.create_back_up(source_db_path=source_db_path, backup_folder=backup_folder)
 
-@bot.message_handler(commands=['day'])
+
+
 def get_day_tasks(message):
     db = BotDb('dairy_db.sql')
     day_tasks = db.get_day_tasks(message.chat.id)

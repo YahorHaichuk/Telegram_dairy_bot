@@ -3,6 +3,9 @@ import sqlite3
 import sys
 from datetime import datetime
 
+import shutil
+import os
+
 import telebot
 
 
@@ -226,6 +229,23 @@ class BotDb:
         """Закрытие соеденения с БД."""
 
         self.conn.close()
+
+    def create_back_up(self, source_db_path, backup_folder):
+        """Создает бэкап базы данных.
+        source_db_path - Путь к исходной базе данных; backup_folder - Путь к папке с резервными копиями"""
+        try:
+            connection = sqlite3.connect('dairy_db.sql')
+            connection.close()
+
+            # Создаем копию файла базы данных в папке с резервными копиями
+            today = datetime.today().date()
+            backup_file_path = os.path.join(backup_folder, f'backup_database_{today}.db')
+            shutil.copyfile(source_db_path, backup_file_path)
+            bot.send_message(927883641, "Резервная копия создана успешно!")
+        except Exception as e:
+            bot.send_message(927883641, f'Сбой при создании резервной копии БД:\n {e}')
+
+
 
 
 
