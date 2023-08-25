@@ -294,14 +294,32 @@ class BotDb:
         s = self.cursor.fetchall()
         return s
 
+    def get_task_statistic_period(self, chat_id, start_period_date, end_period_date):
+        self.cursor.execute(
+            '''SELECT task, SUM(elapsed_time) AS total_elapsed_time
+             FROM tasks
+             WHERE date BETWEEN ? AND ? AND user_id = ? AND is_done = 1
+             GROUP BY task;''',
+            (str(start_period_date), (str(end_period_date)), chat_id))
+        s = self.cursor.fetchall()
+
+        t = self.cursor.execute(
+            '''SELECT SUM(elapsed_time)
+             FROM tasks
+             WHERE date BETWEEN ? AND ? AND user_id = ? AND is_done = 1
+             GROUP BY task;''', (str(start_period_date), str(end_period_date), chat_id))
+        total_time_list = t.fetchall()
+        summ = sum(value[0] for value in total_time_list)
+        s.append(summ)
+        return s
+
     def get_user_statistic_week(self):
         pass
 
     def get_user_statistic_month(self):
         pass
 
-    def get_task_statistic_period(self):
-        pass
+
 
 
 

@@ -4,7 +4,8 @@ import time
 import requests
 from telebot import types
 
-from auxiliary_functions import duration_in_minutes, get_week_days_list, days_until_end_of_month
+from auxiliary_functions import duration_in_minutes, get_week_days_list, days_until_end_of_month, \
+    get_all_days_of_current_month
 from database import BotDb
 import telebot
 
@@ -170,6 +171,47 @@ def get_month_statistic(message):
         bot.send_message(message.chat.id, f"На задачу: {task} вы потратили {time} минут")
 
     bot.send_message(message.chat.id, f' сегодня вы продуктивно провели {today_total_time} минут')
+
+
+@bot.message_handler(commands=['period_statistic'])
+def get_start_point_period_statistic(message):
+    bot.send_message(message.chat.id, f'Введите дату начала отрезка статистики в формате "2023-01-01"')
+
+    month = get_all_days_of_current_month()
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    markup.add(*month)
+    bot.send_message(message.chat.id, "Вы можете вписать дату или выбрать кнопкой", reply_markup=markup)
+    bot.register_next_step_handler(message, get_end_point_period_statistic)
+
+
+def get_end_point_period_statistic(message):
+    bot.send_message(message.chat.id, f'Введите дату конца отрезка статистики в формате "2023-01-01"')
+    month = get_all_days_of_current_month()
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    markup.add(*month)
+    bot.send_message(message.chat.id, "Вы можете вписать дату или выбрать кнопкой", reply_markup=markup)
+    start_point = message.text
+    bot.register_next_step_handler(message, get_period_statistic, start_point=start_point)
+
+
+def get_period_statistic(message, start_point):
+    """копия метода из класса для русного вызова"""
+    db = BotDb('dairy_db.sql')
+    end_point = message.text
+    period = db.get_task_statistic_period(message.chat.id, start_point, end_point)
+
+    period_total_time = period[-1]
+    period.pop()
+
+    bot.send_message(message.chat.id, 'Вот важи результаты на текуший месяц')
+
+    for i in period:
+        task = i[0]
+        time = i[1]
+        bot.send_message(message.chat.id, f"На задачу: {task} вы потратили {time} минут")
+
+    bot.send_message(message.chat.id, f'''В период от {start_point} до {end_point}
+    вы продуктивно провели {period_total_time} минут''')
 
 
 @bot.message_handler(commands=['week_statistic'])
