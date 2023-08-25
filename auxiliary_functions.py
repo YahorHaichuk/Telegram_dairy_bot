@@ -139,4 +139,35 @@ def days_until_end_of_month_list():
     return days_list
 
 
-event = threading.Event()
+def get_days_until_today():
+    today = datetime.datetime.today()
+    first_day_of_month = today.replace(day=1)
+    days = []
+
+    current_day = first_day_of_month
+    while current_day <= today:
+        days.append(current_day.date().strftime("%Y-%m-%d"))
+        current_day += timedelta(days=1)
+
+    return days
+
+from datetime import datetime, timedelta
+
+
+def get_days_of_current_week():
+    today = datetime.today()
+    current_weekday = today.weekday()  # Получаем номер дня недели (понедельник - 0, воскресенье - 6)
+    start_of_week = today - timedelta(days=current_weekday)  # Находим первый день текущей недели
+
+    days_of_week = [start_of_week + timedelta(days=i) for i in range(7)]  # Список дней текущей недели
+    days_strings = [day.strftime('%Y-%m-%d') for day in days_of_week]  # Преобразование дат в строки
+
+    return days_strings
+
+
+
+
+
+
+
+

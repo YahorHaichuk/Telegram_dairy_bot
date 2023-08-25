@@ -153,12 +153,49 @@ def task_date(message, task_text):
         bot.send_message(message.chat.id, 'Запись уже существует')
 
 
-
-@bot.message_handler(commands=['morning_send'])
-def morning_send(message):
+@bot.message_handler(commands=['today_statistic'])
+def get_month_statistic(message):
     """копия метода из класса для русного вызова"""
-    auto_send = AutoSendMessage()
-    auto_send.evening_send()
+    db = BotDb('dairy_db.sql')
+    today = db.get_today_statistic(message.chat.id)
+
+    today_total_time = today[-1]
+    today.pop()
+
+    bot.send_message(message.chat.id, 'Вот важи результаты на текуший месяц')
+
+    for i in today:
+        task = i[0]
+        time = i[1]
+        bot.send_message(message.chat.id, f"На задачу: {task} вы потратили {time} минут")
+
+    bot.send_message(message.chat.id, f' сегодня вы продуктивно провели {today_total_time} минут')
+
+
+@bot.message_handler(commands=['week_statistic'])
+def get_week_statistic(message):
+    """копия метода из класса для русного вызова"""
+    db = BotDb('dairy_db.sql')
+    week_stat = db.get_task_statistic_week(message.chat.id)
+
+    bot.send_message(message.chat.id, 'Вот важи результаты на текушую неделю')
+    for i in week_stat:
+        task = i[0]
+        time = i[1]
+        bot.send_message(message.chat.id, f"На задачу: {task} вы потратили {time} минут")
+
+@bot.message_handler(commands=['month_statistic'])
+def get_month_statistic(message):
+    """копия метода из класса для русного вызова"""
+    db = BotDb('dairy_db.sql')
+    month_stat = db.get_task_statistic_month(message.chat.id)
+
+    bot.send_message(message.chat.id, 'Вот важи результаты на текуший месяц')
+    for i in month_stat:
+        task = i[0]
+        time = i[1]
+        bot.send_message(message.chat.id, f"На задачу: {task} вы потратили {time} минут")
+
 
 @bot.message_handler(commands=['done_today_tasks'])
 def done_today_tasks(message):
@@ -218,10 +255,6 @@ def all_callbacks_handler(call):
                 call.data.split('*')[1].strip() == task_text_range_month and call.data.split('*')[
                     2].strip() == 'month'):
             cycle_month(call)  # период повторения месяц
-
-
-
-
 
     if len(call.data.split('*')) > 1 and call.data.split('*')[1].strip() in days:
         if (BotDb('dairy_db.sql').get_task_range_week(#вызвывает функцию записи повторных задач на неделю

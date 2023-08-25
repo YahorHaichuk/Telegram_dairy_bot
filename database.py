@@ -9,7 +9,8 @@ import os
 import telebot
 
 
-from auxiliary_functions import get_week_days_list, convert_to_datetime, get_week_days_dict, days_until_end_of_month
+from auxiliary_functions import get_week_days_list, convert_to_datetime, get_week_days_dict, days_until_end_of_month, \
+    get_days_until_today, get_days_of_current_week
 
 TOKEN = '6193050640:AAGxCsSYcN9ykAf6N29Z-bcLCYUFqQYJ7YQ'
 bot = telebot.TeleBot(TOKEN)
@@ -205,7 +206,6 @@ class BotDb:
 
             return self.conn.commit()
 
-
     def get_task_editing(self, message, editing_task):
         """Выбираем задачу для редактирования"""
         today = datetime.today().date()
@@ -244,6 +244,64 @@ class BotDb:
             bot.send_message(927883641, "Резервная копия создана успешно!")
         except Exception as e:
             bot.send_message(927883641, f'Сбой при создании резервной копии БД:\n {e}')
+
+    def get_today_statistic(self, chat_id):
+        today = datetime.today().date()
+        self.cursor.execute(
+            '''SELECT task, SUM(elapsed_time)
+             FROM tasks
+             WHERE date = ? AND user_id = ? AND is_done = 1
+             GROUP BY task;''', (str(today), chat_id))
+
+        s = self.cursor.fetchall()
+        t = self.cursor.execute(
+            '''SELECT task, SUM(elapsed_time)
+             FROM tasks
+             WHERE date = ? AND user_id = ? AND is_done = 1
+             GROUP BY task;''', (str(today), chat_id))
+
+        total_time = t.fetchone()
+
+        s.append(str(total_time[1]))
+
+        return s
+
+    def get_task_statistic_week(self, chat_id):
+        today = datetime.today().date()
+        week = get_days_of_current_week()
+        monday = week[0]
+        self.cursor.execute(
+            '''SELECT task, SUM(elapsed_time) AS total_elapsed_time
+             FROM tasks
+             WHERE date BETWEEN ? AND ? AND user_id = ? AND is_done = 1
+             GROUP BY task;''', (str(monday), (str(today)), chat_id)
+        )
+        s = self.cursor.fetchall()
+        return s
+
+    def get_task_statistic_month(self, chat_id):
+        """Возвращает выборку задачи и затраченное на нее время от 1 дня месяца до сегодня"""
+        today = datetime.today().date().strftime('%Y-%m-%d')
+        current_month_days = get_days_until_today()
+        first_month_day = current_month_days[0]
+        self.cursor.execute(
+            '''SELECT task, SUM(elapsed_time) AS total_elapsed_time
+             FROM tasks
+             WHERE date BETWEEN ? AND ? AND user_id = ? AND is_done = 1
+             GROUP BY task;''',
+            (str(first_month_day), (str(today)), chat_id)
+        )
+        s = self.cursor.fetchall()
+        return s
+
+    def get_user_statistic_week(self):
+        pass
+
+    def get_user_statistic_month(self):
+        pass
+
+    def get_task_statistic_period(self):
+        pass
 
 
 
