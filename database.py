@@ -313,13 +313,36 @@ class BotDb:
         s.append(summ)
         return s
 
-    def get_user_statistic_week(self):
-        pass
+    def get_user_statistic_week(self, chat_id):
+        today = datetime.today().date()
+        week = get_days_of_current_week()
+        monday = week[0]
 
-    def get_user_statistic_month(self):
-        pass
+        t = self.cursor.execute(
+            '''SELECT SUM(elapsed_time)
+             FROM tasks
+             WHERE date BETWEEN ? AND ? AND user_id = ? AND is_done = 1
+             GROUP BY task;''', (str(monday), str(today), chat_id))
+        total_time = t.fetchall()
+        summ = sum(value[0] for value in total_time)
+        return summ
 
+    def get_user_statistic_month(self, chat_id):
+        today = datetime.today().date().strftime('%Y-%m-%d')
+        current_month_days = get_days_until_today()
+        first_month_day = current_month_days[0]
 
+        t = self.cursor.execute(
+            '''SELECT task, SUM(elapsed_time) AS total_elapsed_time
+             FROM tasks
+             WHERE date BETWEEN ? AND ? AND user_id = ? AND is_done = 1
+             GROUP BY task;''', (str(first_month_day), (str(today)), chat_id)
+        )
+
+        total_time = t.fetchall()
+
+        summ = sum(value[0] for value in total_time)
+        return summ
 
 
 

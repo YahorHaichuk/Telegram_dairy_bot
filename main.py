@@ -129,7 +129,6 @@ def task(message):
     task_text = f'*{message.text}*'
     bot.send_message(message.chat.id, 'Напишите дату в формате:  2023-06-30')
 
-    #TODO сделать кнопки
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     buttons = []
     for i in get_week_days_list():
@@ -155,7 +154,7 @@ def task_date(message, task_text):
 
 
 @bot.message_handler(commands=['today_statistic'])
-def get_month_statistic(message):
+def get_month_tasks_statistic(message):
     """копия метода из класса для русного вызова"""
     db = BotDb('dairy_db.sql')
     today = db.get_today_statistic(message.chat.id)
@@ -191,10 +190,10 @@ def get_end_point_period_statistic(message):
     markup.add(*month)
     bot.send_message(message.chat.id, "Вы можете вписать дату или выбрать кнопкой", reply_markup=markup)
     start_point = message.text
-    bot.register_next_step_handler(message, get_period_statistic, start_point=start_point)
+    bot.register_next_step_handler(message, get_period_tasks_statistic, start_point=start_point)
 
 
-def get_period_statistic(message, start_point):
+def get_period_tasks_statistic(message, start_point):
     """копия метода из класса для русного вызова"""
     db = BotDb('dairy_db.sql')
     end_point = message.text
@@ -215,7 +214,7 @@ def get_period_statistic(message, start_point):
 
 
 @bot.message_handler(commands=['week_statistic'])
-def get_week_statistic(message):
+def get_week_tasks_statistic(message):
     """копия метода из класса для русного вызова"""
     db = BotDb('dairy_db.sql')
     week_stat = db.get_task_statistic_week(message.chat.id)
@@ -237,6 +236,20 @@ def get_month_statistic(message):
         task = i[0]
         time = i[1]
         bot.send_message(message.chat.id, f"На задачу: {task} вы потратили {time} минут")
+
+
+@bot.message_handler(commands=['month_total_time'])
+def get_total_time_statistic_month(message):
+    db = BotDb('dairy_db.sql')
+    month_total_time = db.get_user_statistic_month(message.chat.id)
+    bot.send_message(message.chat.id, f'В этом месяце вы продуктивно провели {month_total_time} минут')
+
+
+@bot.message_handler(commands=['week_total_time'])
+def get_total_time_statistic_week(message):
+    db = BotDb('dairy_db.sql')
+    month_total_time = db.get_user_statistic_week(message.chat.id)
+    bot.send_message(message.chat.id, f'На этой неделе вы продуктивно провели {month_total_time} минут')
 
 
 @bot.message_handler(commands=['done_today_tasks'])

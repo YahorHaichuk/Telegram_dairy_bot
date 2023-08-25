@@ -141,7 +141,7 @@ def days_until_end_of_month_list():
 
 
 def get_days_until_today():
-    today = datetime.datetime.today()
+    today = datetime.today()
     first_day_of_month = today.replace(day=1)
     days = []
 
