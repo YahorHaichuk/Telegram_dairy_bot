@@ -12,13 +12,14 @@ today = datetime.date.today()
 
 
 def duration_in_minutes(start_time, end_time):
-    start = datetime.datetime.strptime(start_time, '%H:%M')
-    end = datetime.datetime.strptime(end_time, '%H:%M')
 
+    start = datetime.strptime(start_time, '%H:%M')
+    end = datetime.datetime.strptime(end_time, '%H:%M')
     time_difference = end - start
 
     minutes = time_difference.total_seconds() / 60
     return int(minutes)
+
 
 
 def get_week_days_list():
@@ -74,7 +75,7 @@ def get_week_days_dict():
 
 def convert_to_datetime(message, date):
     try:
-        date = datetime.datetime.strptime(date, '%Y-%m-%d')
+        date = datetime.strptime(date, '%Y-%m-%d')
         return date.date()
     except ValueError:
         error = 'Пожалуйста укажити дату так как это показано в примере, добавление задачи сброшено, начните сначала'

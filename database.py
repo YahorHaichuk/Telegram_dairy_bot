@@ -230,6 +230,12 @@ class BotDb:
 
         self.conn.close()
 
+    def delete(self, task, date):
+        self.cursor.execute('''DELETE FROM tasks WHERE task = ? AND date = ?''', (task, date))
+
+        self.conn.commit()
+        self.conn.close()
+
     def create_back_up(self, source_db_path, backup_folder):
         """Создает бэкап базы данных.
         source_db_path - Путь к исходной базе данных; backup_folder - Путь к папке с резервными копиями"""

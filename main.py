@@ -1,4 +1,5 @@
 import datetime
+import sys
 import time
 
 import requests
@@ -70,10 +71,32 @@ def cycle_month(call):
                Вы находитесь в режиме выбора дней повтора задач на текущий месяц.\n
                '''
     bot.edit_message_text(text, call.message.chat.id, call.message.message_id, reply_markup=markup)
-    #сделать отдельную фунцкию гет из датабазы по примеру недели
-    # сделать добавление по калбэку по принципу недельного добавления
 
-    pass
+@bot.message_handler(commands=['task_delete'])
+def get_task_delete(message):
+    bot.send_message(message.chat.id, 'Ведите задачу для удаления')
+
+    bot.register_next_step_handler(message, task_delete)
+
+
+def task_delete(message):
+    db = BotDb('dairy_db.sql')
+    deleting_task_text = message.text
+    result = db.get_task_editing(message, deleting_task_text)
+    buttons = []
+    markup = types.InlineKeyboardMarkup()
+
+    for i in result:
+        buttons.append(types.InlineKeyboardButton(f'{i[1]}', callback_data=f' *task_delete* {i[0]} * {i[1]}'))
+
+    markup.add(*buttons)
+    text = f'''задача для удаления {result[0][0]} обнаруженв ы следушмщих днях на ближайжую неделю
+            пожалуйста выберите день в который вы хотите удалить данную задачу'''
+    if result is not None:
+        bot.send_message(message.chat.id, text, reply_markup=markup)
+    else:
+        bot.send_message(message.chat.id, 'Выборка пуста')
+
 
 
 @bot.message_handler(commands=['task_edit'])
@@ -271,6 +294,7 @@ def done_today_tasks(message):
 
 @bot.callback_query_handler(func=lambda call: True)
 def all_callbacks_handler(call):
+    db = BotDb('dairy_db.sql')
     p = call.data.split('*')
     pp = len(call.data.split('*'))
     #x = call.data.split('*')[2].strip()
@@ -333,6 +357,16 @@ def all_callbacks_handler(call):
             editing_task = call.data.split('*')[1:][1].strip()
             editing_date = call.data.split('*')[1:][2].strip()
             update_info(call.message, editing_task, editing_date)
+
+
+    if (len(call.data.split('*')) >= 3 and call.data.split('*')[1:][0] == 'task_delete'):
+        if ((call.data.split('*')[1:][1].strip(), call.data.split('*')[1:][2].strip())
+                in BotDb('dairy_db.sql').get_task_editing(call.message, call.data.split('*')[1:][1].strip())):
+            deleting_task = call.data.split('*')[1:][1].strip()
+            deleting_task_date = call.data.split('*')[1:][2].strip()
+            db.delete(deleting_task, deleting_task_date)
+            bot.send_message(call.message.chat.id, f''' задача {deleting_task} в день {deleting_task_date} удалена
+''')
 
 
     # elif call.data.split(' * ')[0] == text[1:-1] and call.data.split('*')[1].replace(" ", "") in days:
@@ -408,7 +442,11 @@ def add_start_time(message, task_time_add):
 def add_end_time(message, task_time_add, start_time):
     db = BotDb('dairy_db.sql')
     end_time = message.text
-    minutes = duration_in_minutes(start_time, end_time)
+    try:
+        minutes = duration_in_minutes(start_time, end_time)
+    except ValueError:
+        bot.send_message(message.chat.id, "Введите корректное время. Время должно быть больше 0.")
+        sys.exit()
     db.spent_time_task_add(task_time_add, minutes)
 
     db.close()
