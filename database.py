@@ -19,7 +19,6 @@ recurring_days_list = []
 recurring_days_dict = {}
 
 
-
 class BotDb:
 
     def __init__(self, db_name):

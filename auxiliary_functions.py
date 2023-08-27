@@ -2,7 +2,6 @@ import calendar
 import datetime
 from datetime import timedelta
 import telebot
-import threading
 import locale
 
 TOKEN = '6193050640:AAGxCsSYcN9ykAf6N29Z-bcLCYUFqQYJ7YQ'
@@ -13,13 +12,12 @@ today = datetime.date.today()
 
 def duration_in_minutes(start_time, end_time):
 
-    start = datetime.strptime(start_time, '%H:%M')
+    start = datetime.datetime.strptime(start_time, '%H:%M')
     end = datetime.datetime.strptime(end_time, '%H:%M')
     time_difference = end - start
 
     minutes = time_difference.total_seconds() / 60
     return int(minutes)
-
 
 
 def get_week_days_list():
@@ -75,7 +73,7 @@ def get_week_days_dict():
 
 def convert_to_datetime(message, date):
     try:
-        date = datetime.strptime(date, '%Y-%m-%d')
+        date = datetime.datetime.strptime(date, '%Y-%m-%d')
         return date.date()
     except ValueError:
         error = 'Пожалуйста укажити дату так как это показано в примере, добавление задачи сброшено, начните сначала'
@@ -142,7 +140,7 @@ def days_until_end_of_month_list():
 
 
 def get_days_until_today():
-    today = datetime.today()
+    today = datetime.datetime.today()
     first_day_of_month = today.replace(day=1)
     days = []
 
@@ -153,11 +151,9 @@ def get_days_until_today():
 
     return days
 
-from datetime import datetime, timedelta
-
 
 def get_days_of_current_week():
-    today = datetime.today()
+    today = datetime.datetime.today()
     current_weekday = today.weekday()  # Получаем номер дня недели (понедельник - 0, воскресенье - 6)
     start_of_week = today - timedelta(days=current_weekday)  # Находим первый день текущей недели
 
@@ -168,7 +164,7 @@ def get_days_of_current_week():
 
 
 def get_all_days_of_current_month():
-    today = datetime.today()
+    today = datetime.datetime.today()
     year = today.year
     month = today.month
     _, num_days = calendar.monthrange(year, month)
