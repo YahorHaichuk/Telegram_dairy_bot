@@ -1,7 +1,6 @@
 import datetime
 import sys
 
-
 from auxiliary_functions import duration_in_minutes, get_all_days_of_current_month
 from bot_handlers import *
 from database import BotDb
@@ -15,7 +14,6 @@ bot = telebot.TeleBot(TOKEN)
 
 days_of_week = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
 days = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']
-recurring_this_week = []
 
 
 @bot.message_handler(commands=['week'])
@@ -24,32 +22,22 @@ def week_tasks_handler(message):
 
 
 @bot.message_handler(commands=['backup'])
-#рУЧНОЙ ВЫЗОВ бжкапа бд
+#MANUAL CALL DB backup
 def create_back_up(message):
-    source_db_path = 'D:\DEVELOP\cats_dairy\dairy_db.sql'  # Путь к исходной базе данных
-    backup_folder = 'D:\DEVELOP\cats_dairy\db_backup'  # Путь к папке с резервными копиями
+    source_db_path = 'D:\DEVELOP\cats_dairy\dairy_db.sql'  # Path to source database
+    backup_folder = 'D:\DEVELOP\cats_dairy\db_backup'  # Path to the backup folder
     backup = BotDb('dairy_db.sql')
     backup.create_back_up(source_db_path=source_db_path, backup_folder=backup_folder)
 
 
-
-def get_day_tasks(message):
-    db = BotDb('dairy_db.sql')
-    day_tasks = db.get_day_tasks(message.chat.id)
-    db.close()
-    bot.send_message(message.chat.id, 'Сеодня вам нужно сделать следующик задачи')
-    for el in day_tasks:
-        bot.send_message(message.chat.id, f'{el}')
+@bot.message_handler(commands=['today_tasks'])
+def get_day_tasks_handler(message):
+    get_day_tasks(message)
 
 
 @bot.message_handler(commands=['month'])
-def get_month_tasks(message):
-    db = BotDb('dairy_db.sql')
-    day_tasks = db.get_month_tasks(message.chat.id)
-    db.close()
-    for el in day_tasks:
-        bot.send_message(message.chat.id, f'{el[1]}')
-        bot.send_message(message.chat.id, f'дата выполнения этой задачи {el[2]}')
+def get_month_tasks_handler(message):
+    get_month_tasks(message)
 
 
 def cycle_month(call):
@@ -78,7 +66,11 @@ def task_delete_handler(message):
 
 @bot.message_handler(commands=['task_edit'])
 def get_editing_task_text_handler(message):
-    bot.send_message(message.chat.id, 'Ведите задачу для редактирования')
+    text = """Ведите задачу для редактирования
+    Чтобы получить список задач на сегодня нажмите /today_tasks\n
+    Чтобы получить список задач на неделю нажмите /week\n
+    Чтобы получить список задач на месяц нажмите /month"""
+    bot.send_message(message.chat.id, text)
 
     bot.register_next_step_handler(message, get_editing_task_db)
 
@@ -100,7 +92,7 @@ def update_task_handler(message, data):
     bot.send_message(message.chat.id, 'Задача изменена')
 
 
-@bot.message_handler(commands=['start'])
+@bot.message_handler(commands=['task_add'])
 def start_handler(message):
     start(message)
     bot.register_next_step_handler(message, task_handler)
@@ -144,7 +136,6 @@ def get_end_point_period_statistic(message):
 
 
 def get_period_tasks_statistic(message, start_point):
-    """копия метода из класса для русного вызова"""
     db = BotDb('dairy_db.sql')
     end_point = message.text
     period = db.get_task_statistic_period(message.chat.id, start_point, end_point)
@@ -221,6 +212,28 @@ def add_end_time(message, task_time_add, start_time):
                      f'на задачу {task_time_add} вы потратили {minutes} минут.\nрезультат сохранен.')
 
 
+@bot.message_handler(commands=['delete_all_info'])
+def delete_all_tasks_by_user_id(message):
+    markup = types.InlineKeyboardMarkup(row_width=3)
+    buttons = [
+        types.InlineKeyboardButton('Я хочу удалить все данные', callback_data=f'DELETE_ALL_YES*{message.chat.id}'),
+        types.InlineKeyboardButton('Я передумал удалять все данные', callback_data=f'DELETE_ALL_NO*{message.chat.id}')
+    ]
+    markup.add(*buttons)
+    bot.send_message(message.chat.id, 'АСТАНАВИТЕСЬ!', reply_markup=markup)
+
+
+def confirmation_delete_all_tasks_by_user_id(message):
+    markup = types.InlineKeyboardMarkup(row_width=3)
+    buttons = [
+        types.InlineKeyboardButton('Я хочу точно удалить ВСЁ',
+                                   callback_data=f'EXACTLY_DELETE_ALL_YES*{message.chat.id}'),
+        types.InlineKeyboardButton('Я передумал удалять все данные', callback_data=f'DELETE_ALL_NO*{message.chat.id}')
+    ]
+    markup.add(*buttons)
+    bot.edit_message_text('АСТАНАВИТЕСЬ!', message.chat.id, message.message_id, reply_markup=markup)
+
+
 def month_cycle_add(call):
     db = BotDb('dairy_db.sql')
     current_year = str(datetime.datetime.now().year) + '-'
@@ -276,24 +289,25 @@ def recurring_tasks_week(call):
 
 @bot.callback_query_handler(func=lambda call: True)
 def all_callbacks_handler(call):
+    x = call.data.split('*')[0]
     db = BotDb('dairy_db.sql')
     task_text_range_week = None
     task_text_range_month = None
-    today_tasks = BotDb('dairy_db.sql').get_day_tasks(call.message.chat.id)
+    today_tasks = db.get_day_tasks(call.message.chat.id)
     try:
         if len(call.data.split('*')) > 2 and call.data.split('*')[2].strip() == 'week':
-            task_text_range_week = (BotDb('dairy_db.sql').get_task_range_week(call.data.split('*')[1].strip(), call.message.chat.id))
+            task_text_range_week = (db.get_task_range_week(call.data.split('*')[1].strip(), call.message.chat.id))
     except TypeError:
         task_text_range_week = None
 
-    try: #Нажатие кнопки "месяц"
+    try: #Pressing the "month" button
         if len(call.data.split('*')) > 2 and call.data.split('*')[2].strip() == 'month':
             task_text_range_month = (
                 BotDb('dairy_db.sql').get_task_range_month(call.data.split('*')[1].strip(), call.message.chat.id))
     except TypeError:
         task_text_range_month = None
 
-    try: #Нажатие кнопки "день месяца"
+    try: #Pressing the "day of the month" button
         if len(call.data.split('*')) > 2 and call.data.split('*')[2].strip() == 'month_daily':
             task_text_range_month = (
                 BotDb('dairy_db.sql').get_task_range_month(call.data.split('*')[0].strip(), call.message.chat.id))
@@ -301,29 +315,28 @@ def all_callbacks_handler(call):
         task_text_range_month = None
 
     if (
-            call.data is not None and today_tasks is not None and call.data in today_tasks):  # выполнение сегодняшней задачи
+            call.data is not None and today_tasks is not None and call.data in today_tasks):  #complete today's task
         done_today_callback(call)
     if len(call.data.split('*')) == 3:
         if (task_text_range_week is not None
                 and call.data.split('*')[1] == task_text_range_week
                 and call.data.split('*')[2].strip() == 'week'):
-            callback_recurring_tasks_many_words_handler(call)  # период повторения неделя
+            callback_recurring_tasks_many_words_handler(call)  # repeat period week
     if len(call.data.split('*')) == 3:
         if (task_text_range_month is not None and
                 call.data.split('*')[1].strip() == task_text_range_month and call.data.split('*')[
                     2].strip() == 'month'):
-            cycle_month(call)  # период повторения месяц
+            cycle_month(call)  # repeat period month
 
-    if len(call.data.split('*')) > 1 and call.data.split('*')[1].strip() in days:
-        if (BotDb('dairy_db.sql').get_task_range_week(#вызвывает функцию записи повторных задач на неделю
+    if len(call.data.split('*')) > 1 and call.data.split('*')[1].strip() in days: #calls the function to record repeated tasks for the week
+        if (BotDb('dairy_db.sql').get_task_range_week(
                 call.data.split('*')[0].strip(), call.message.chat.id)) and (
                 call.data.split('*')[1].strip() in days):
             recurring_tasks_week(call)
 
-    if call.data == 'only_one':# добавляет задачу без довторения
+    if call.data == 'only_one':#adds a task without repetition
         bot.send_message(call.message.chat.id, 'Задача добавлена')
-    # вызвывает функцию записи повторных задач на месяц
-    if len(call.data.split('*')) == 3:
+    if len(call.data.split('*')) == 3: #calls the function of recording repeated tasks for a month
         if (task_text_range_month is not None and
                 call.data.split('*')[0].strip() == task_text_range_month and call.data.split('*')[
                     2].strip() == 'month_daily'):
@@ -345,8 +358,21 @@ def all_callbacks_handler(call):
             db.delete(deleting_task, deleting_task_date)
             bot.send_message(call.message.chat.id, f''' задача {deleting_task} в день {deleting_task_date} удалена
 ''')
+    if call.data.split('*')[0] == 'DELETE_ALL_YES':
+        confirmation_delete_all_tasks_by_user_id(call.message)
 
+    if call.data.split('*')[0] == 'EXACTLY_DELETE_ALL_YES':
+        db.delete_tasks_by_user_id(call.message.chat.id)
+        bot.send_message(call.message.chat.id, 'Все данные о вас удалены')
 
+    if call.data.split('*')[0] == 'DELETE_ALL_NO':
+        bot.send_message(call.message.chat.id, 'Разумное решение')
+
+@bot.message_handler(commands=['help'])
+def help_handler(message):
+    text = 'HELP'
+
+    bot.send_message(message.chat.id, text)
 def send_time():
 
     hours = CurrentHour()

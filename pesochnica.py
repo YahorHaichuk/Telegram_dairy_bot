@@ -7,7 +7,6 @@ from telebot import types
 
 from auxiliary_functions import duration_in_minutes, get_week_days_list, days_until_end_of_month, \
     get_all_days_of_current_month
-from bot_handlers import Handlers
 from database import BotDb
 import telebot
 

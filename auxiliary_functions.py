@@ -21,7 +21,7 @@ def duration_in_minutes(start_time, end_time):
 
 
 def get_week_days_list():
-    """Возвращает оставшиеся дни недели  до конца недели в формате даты."""
+    """Returns the remaining days of the week until the end of the week in date format."""
     current_weekday = today.weekday()
     days_until_next_monday = (7 - current_weekday) % 7
     if current_weekday == 0:
@@ -44,7 +44,7 @@ def get_week_days_list():
 
 
 def get_week_days_dict():
-    """Возвращает оставшиеся дни недели  до конца недели в формате даты."""
+    """Returns the remaining days of the week until the end of the week in date format."""
     current_weekday = today.weekday()
     days_until_next_monday = (7 - current_weekday) % 7
     if current_weekday == 0:
@@ -82,7 +82,7 @@ def convert_to_datetime(message, date):
 
 
 def days_until_end_of_month():
-    """Получаем все оставшиеся дни текущего месяца начиная с сегодня в виде списка"""
+    """Get all the remaining days of the current month starting from today as a list"""
     today = datetime.datetime.today()
     year = today.year
     month = today.month
@@ -98,9 +98,6 @@ def days_until_end_of_month():
         x.append(d.strftime("%Y-%m-%d"))
 
     return x
-
-
-
 
 
 def days_until_end_of_month_list():
@@ -170,9 +167,3 @@ def get_all_days_of_current_month():
     _, num_days = calendar.monthrange(year, month)
     days_list = [f"{year}-{month:02d}-{day:02d}" for day in range(1, num_days + 1)]
     return days_list
-
-
-
-
-
-

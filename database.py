@@ -22,12 +22,12 @@ recurring_days_dict = {}
 class BotDb:
 
     def __init__(self, db_name):
-        """Инициализация соеденения с БД."""
+        """Initialize database connection."""
         self.conn = sqlite3.connect(db_name)
         self.cursor = self.conn.cursor()
 
     def create_db(self, chat_id):
-        """Создание базы данных. Таблица users и tasks"""
+        """Creating a database. Table users and tasks"""
 
         self.cursor.execute('CREATE TABLE IF NOT EXISTS users (user_id INTEGER)')
 
@@ -45,7 +45,7 @@ class BotDb:
         return self.conn.commit()
 
     def get_task_range_week(self, task, chat_id):
-        """Выбирает таск от пользователя для проверки условия на добавление повтора в неделю"""
+        """Selects a task from the user to check the condition for adding a repeat per week"""
         task = task.split('* ')
         if task[0][0] == '*':
             task[0] = task[0][1:]
@@ -58,7 +58,7 @@ class BotDb:
         return x[0]
 
     def get_task_range_month(self, task, chat_id):
-        """Выбирает таск от пользователя для проверки условия на добавление повтора в неделю"""
+        """Selects a task from the user to check the condition for adding a repeat per week"""
         task = task.split('* ')
         if task[0][0] == '*':
             task[0] = task[0][1:]
@@ -71,7 +71,7 @@ class BotDb:
         return x[0]
 
     def get_week_tasks(self, chat_id):
-        """Задачи на текущую неделю"""
+        """Tasks for the current week"""
         today = datetime.today().date()
         week = get_week_days_list()
         sunday = week[-1]
@@ -82,7 +82,7 @@ class BotDb:
         return self.cursor.fetchall()
 
     def get_day_tasks(self, chat_id):
-        """Задачи на текущий день"""
+        """Today's tasks"""
         if isinstance(chat_id, tuple):
             user = chat_id[0]
             user = str(user)
@@ -101,7 +101,7 @@ class BotDb:
         return today_tasks
 
     def get_month_tasks(self, chat_id):
-        """Задачи на текущий месяц"""
+        """Tasks for the current month"""
         today = datetime.today().date()
         month = str(today).split('-')
         last_day = calendar.monthrange(today.year, today.month)[1]
@@ -115,7 +115,7 @@ class BotDb:
         return self.cursor.fetchall()
 
     def start(self, chat_id):
-        """Добавление задачи"""
+        """Adding a task"""
         self.cursor.execute(f'SELECT user_id FROM users WHERE user_id = {chat_id}')
         user = self.cursor.fetchone()
 
@@ -128,7 +128,7 @@ class BotDb:
         return self.conn.commit()
 
     def task_date(self, text, date, message):
-        """Добавление даты выполнения в добавляемую задачу"""
+        """Adding a due date to the added task"""
         task = text.replace("*", "")
         self.date = date
         date_str = self.date.strip()
@@ -146,15 +146,15 @@ class BotDb:
         return self.conn.commit()
 
     def get_all_users(self):
-        """Выборка всех пользователей для автоотправки сообщения"""
+        """Selecting all users to auto-send a message"""
         self.cursor.execute(f'SELECT user_id FROM users')
         users = self.cursor.fetchall()
 
         return users
 
     def spent_time_task_add(self, task, duration):
-        """Добавление затраченного времени на задачу при
-            нажатии кнопки вылолнения этой задачи"""
+        """Adding elapsed time to a task when
+            pressing the button to complete this task """
         self.cursor.execute(
             f'UPDATE tasks SET elapsed_time = ? WHERE task = ?', (duration, task)
         )
@@ -165,7 +165,7 @@ class BotDb:
         return self.conn.commit()
 
     def recurring_tasks_week(self, task, days, user_id):
-        """Добавление повторяюзейся задачи на выбранный день недели"""
+        """Adding a recurring task for the selected day of the week"""
         week_days = get_week_days_dict()
         try:
             date = week_days[days]
@@ -186,7 +186,7 @@ class BotDb:
             return self.conn.commit()
 
     def recurring_tasks_month(self, task, day, user_id):
-        """Добавление повторяюзейся задачи на выбранный день недели"""
+        """Adding a recurring task for the selected day of the week"""
         month_days = days_until_end_of_month()
         try:
             task_in_day = self.cursor.execute('SELECT task, date FROM tasks WHERE task = ? AND date = ?', (task, day))
@@ -206,7 +206,7 @@ class BotDb:
             return self.conn.commit()
 
     def get_task_editing(self, message, editing_task):
-        """Выбираем задачу для редактирования"""
+        """Selecting a task to edit"""
         today = datetime.today().date()
         week = get_week_days_list()
         sunday = week[-1]
@@ -225,7 +225,7 @@ class BotDb:
         return self.conn.commit()
 
     def close(self):
-        """Закрытие соеденения с БД."""
+        """Closing the database connection."""
 
         self.conn.close()
 
@@ -236,8 +236,8 @@ class BotDb:
         self.conn.close()
 
     def create_back_up(self, source_db_path, backup_folder):
-        """Создает бэкап базы данных.
-        source_db_path - Путь к исходной базе данных; backup_folder - Путь к папке с резервными копиями"""
+        """Creates a database backup.
+        source_db_path - Path to source database; backup_folder - Path to folder with backups"""
         try:
             connection = sqlite3.connect('dairy_db.sql')
             connection.close()
@@ -285,7 +285,7 @@ class BotDb:
         return s
 
     def get_task_statistic_month(self, chat_id):
-        """Возвращает выборку задачи и затраченное на нее время от 1 дня месяца до сегодня"""
+        """Returns a selection of the task and the time spent on it from the 1st day of the month to today"""
         today = datetime.today().date().strftime('%Y-%m-%d')
         current_month_days = get_days_until_today()
         first_month_day = current_month_days[0]
@@ -338,7 +338,7 @@ class BotDb:
         first_month_day = current_month_days[0]
 
         t = self.cursor.execute(
-            '''SELECT task, SUM(elapsed_time) AS total_elapsed_time
+            '''SELECT SUM(elapsed_time) AS total_elapsed_time
              FROM tasks
              WHERE date BETWEEN ? AND ? AND user_id = ? AND is_done = 1
              GROUP BY task;''', (str(first_month_day), (str(today)), chat_id)
@@ -348,6 +348,10 @@ class BotDb:
 
         summ = sum(value[0] for value in total_time)
         return summ
+
+    def delete_tasks_by_user_id(self, user_id):
+        self.cursor.execute("DELETE FROM tasks WHERE user_id = ?", (user_id,))
+        self.conn.commit()
 
 
 

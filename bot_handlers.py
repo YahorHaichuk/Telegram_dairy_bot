@@ -88,13 +88,37 @@ def get_editing_task_db(message):
         buttons.append(types.InlineKeyboardButton(f'{i[1]}', callback_data=f' *task_edit* {i[0]} * {i[1]}'))
 
     markup.add(*buttons)
-    text = f'''Редактируемая задача {result[0][0]} обнаруженв ы следушмщих днях на ближайжую неделю
-        пожалуйста выберите день в который вы хотите редактировать данную задачу'''
-    if result is not None:
+    if result is not None and len(result) > 0:
+        text = f'''Редактируемая задача {result[0][0]} обнаруженв ы следушмщих днях на ближайжую неделю
+                пожалуйста выберите день в который вы хотите редактировать данную задачу'''
         bot.send_message(message.chat.id, text, reply_markup=markup)
+    elif message.text == '/today_tasks':
+        get_day_tasks(message)
+    elif message.text == '/week':
+        get_user_week_tasks(message)
+
+    elif message.text == '/month':
+        get_month_tasks(message)
     else:
         bot.send_message(message.chat.id, 'Выборка пуста')
 
+
+def get_day_tasks(message):
+    db = BotDb('dairy_db.sql')
+    day_tasks = db.get_day_tasks(message.chat.id)
+    db.close()
+    bot.send_message(message.chat.id, 'Сеодня вам нужно сделать следующик задачи')
+    for el in day_tasks:
+        bot.send_message(message.chat.id, f'{el}')
+
+
+def get_month_tasks(message):
+    db = BotDb('dairy_db.sql')
+    day_tasks = db.get_month_tasks(message.chat.id)
+    db.close()
+    for el in day_tasks:
+        bot.send_message(message.chat.id, f'{el[1]}')
+        bot.send_message(message.chat.id, f'дата выполнения этой задачи {el[2]}')
 
 def get_today_tasks_statistic(message):
     """копия метода из класса для русного вызова"""
