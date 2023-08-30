@@ -16,6 +16,12 @@ days_of_week = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturda
 days = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']
 
 
+@bot.message_handler(commands=['create_db'])
+def create_db(message):
+    db = BotDb('dairy_db.sql')
+    db.create_db(message.chat.id)
+
+
 @bot.message_handler(commands=['week'])
 def week_tasks_handler(message):
     get_user_week_tasks(message)
@@ -69,7 +75,8 @@ def get_editing_task_text_handler(message):
     text = """Ведите задачу для редактирования
     Чтобы получить список задач на сегодня нажмите /today_tasks\n
     Чтобы получить список задач на неделю нажмите /week\n
-    Чтобы получить список задач на месяц нажмите /month"""
+    Чтобы получить список задач на месяц нажмите /month\n
+    После того как вам придет список задание еще раз нажмите на /task_edit"""
     bot.send_message(message.chat.id, text)
 
     bot.register_next_step_handler(message, get_editing_task_db)
@@ -81,7 +88,7 @@ def get_editing_task_db_handler(message):
 
 def update_info_handler(message, editing_task, editing_date):
     data = [editing_task, editing_date]
-    bot.send_message(message.chat.id, f'Привет! Введите текст:')
+    bot.send_message(message.chat.id, f'Введите отредактированный текст:')
 
     bot.register_next_step_handler(message, update_task_handler, data=data)
 
@@ -183,7 +190,7 @@ def done_today_tasks_handler(message):
     done_today_tasks(message)
 
 
-def add_start_time(message, task_time_add):
+def add_start_time(message, task_time_add, date_data):
     start_time = message.text
 
     bot.send_message(message.chat.id, f'Ведите время в которое вы закончили выполнять задачу\n{task_time_add} в формате "ЧЧ:ММ"')
@@ -193,10 +200,11 @@ def add_start_time(message, task_time_add):
     markup.add(*hours)
     bot.send_message(message.chat.id, "Вы можете вписать дату или выбрать кнопкой", reply_markup=markup)
 
-    bot.register_next_step_handler(message, add_end_time, task_time_add=task_time_add, start_time=start_time)
+    bot.register_next_step_handler(
+        message, add_end_time, task_time_add=task_time_add, start_time=start_time, date_data=date_data)
 
 
-def add_end_time(message, task_time_add, start_time):
+def add_end_time(message, task_time_add, start_time, date_data):
     db = BotDb('dairy_db.sql')
     end_time = message.text
     try:
@@ -204,7 +212,7 @@ def add_end_time(message, task_time_add, start_time):
     except ValueError:
         bot.send_message(message.chat.id, "Введите корректное время. Время должно быть больше 0.")
         sys.exit()
-    db.spent_time_task_add(task_time_add, minutes)
+    db.spent_time_task_add(task_time_add, date_data, minutes)
 
     db.close()
 
@@ -250,9 +258,10 @@ def month_cycle_add(call):
 )
 def done_today_callback(call):
     """Обработчик колбэка на выполнение сегодняшней задачи."""
-    task_time_add = call.data[:]
+    task_time_add = call.data.split("& ")[0]
+    date_data = call.data.split("& ")[1]
     bot.send_message(call.message.chat.id,
-                     f''' Ведите время в которое вы начали выполнять задачу {call.data[:]}\nв формате "ЧЧ:ММ"''')
+                     f''' Ведите время в которое вы начали выполнять задачу {task_time_add}\nв формате "ЧЧ:ММ"''')
 
     hours = ['06:00', '07:00', '08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00',
              '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00', '23:00', ]
@@ -260,7 +269,7 @@ def done_today_callback(call):
     markup.add(*hours)
     bot.send_message(call.message.chat.id, "Вы можете вписать дату или выбрать кнопкой", reply_markup=markup)
 
-    bot.register_next_step_handler(call.message, add_start_time, task_time_add=task_time_add)
+    bot.register_next_step_handler(call.message, add_start_time, task_time_add=task_time_add, date_data=date_data)
 
 
 def callback_recurring_tasks_many_words_handler(call):
@@ -289,11 +298,12 @@ def recurring_tasks_week(call):
 
 @bot.callback_query_handler(func=lambda call: True)
 def all_callbacks_handler(call):
-    x = call.data.split('*')[0]
+    x = call.data.split("& ")
     db = BotDb('dairy_db.sql')
     task_text_range_week = None
     task_text_range_month = None
-    today_tasks = db.get_day_tasks(call.message.chat.id)
+    get_today_tasks = db.get_day_tasks(call.message.chat.id)
+    today_tasks = tuple(i for i, x in get_today_tasks)
     try:
         if len(call.data.split('*')) > 2 and call.data.split('*')[2].strip() == 'week':
             task_text_range_week = (db.get_task_range_week(call.data.split('*')[1].strip(), call.message.chat.id))
@@ -315,8 +325,8 @@ def all_callbacks_handler(call):
         task_text_range_month = None
 
     if (
-            call.data is not None and today_tasks is not None and call.data in today_tasks):  #complete today's task
-        done_today_callback(call)
+            call.data is not None and today_tasks is not None and call.data.split("& ")[0] in today_tasks):  #complete today's task
+            done_today_callback(call)
     if len(call.data.split('*')) == 3:
         if (task_text_range_week is not None
                 and call.data.split('*')[1] == task_text_range_week
@@ -368,11 +378,14 @@ def all_callbacks_handler(call):
     if call.data.split('*')[0] == 'DELETE_ALL_NO':
         bot.send_message(call.message.chat.id, 'Разумное решение')
 
+
 @bot.message_handler(commands=['help'])
 def help_handler(message):
     text = 'HELP'
 
     bot.send_message(message.chat.id, text)
+
+
 def send_time():
 
     hours = CurrentHour()
@@ -381,6 +394,5 @@ def send_time():
 
 #send_time()
 
+bot.polling(none_stop=True)
 
-if __name__ == "__main__":
-    bot.polling(none_stop=True)

@@ -1,3 +1,5 @@
+import sys
+
 from telebot import types
 
 from auxiliary_functions import get_week_days_list
@@ -63,6 +65,9 @@ def task_delete(message):
     result = db.get_task_editing(message, deleting_task_text)
     buttons = []
     markup = types.InlineKeyboardMarkup()
+    db.close()
+    if len(result) == 0:
+        bot.send_message(message.chat.id, 'Такой задачи не найдено проверте правильность написания')
 
     for i in result:
         buttons.append(types.InlineKeyboardButton(f'{i[1]}', callback_data=f' *task_delete* {i[0]} * {i[1]}'))
@@ -83,6 +88,11 @@ def get_editing_task_db(message):
     result = db.get_task_editing(message, task)
 
     markup = types.InlineKeyboardMarkup()
+
+    db.close()
+    if len(result) == 0:
+        bot.send_message(message.chat.id, 'Такой задачи не найдено проверте правильность написания')
+        sys.exit()
 
     for i in result:
         buttons.append(types.InlineKeyboardButton(f'{i[1]}', callback_data=f' *task_edit* {i[0]} * {i[1]}'))
@@ -109,7 +119,7 @@ def get_day_tasks(message):
     db.close()
     bot.send_message(message.chat.id, 'Сеодня вам нужно сделать следующик задачи')
     for el in day_tasks:
-        bot.send_message(message.chat.id, f'{el}')
+        bot.send_message(message.chat.id, f'{el[0]}')
 
 
 def get_month_tasks(message):
@@ -124,7 +134,7 @@ def get_today_tasks_statistic(message):
     """копия метода из класса для русного вызова"""
     db = BotDb('dairy_db.sql')
     today = db.get_today_statistic(message.chat.id)
-
+    db.close()
     today_total_time = today[-1]
     today.pop()
 
@@ -141,7 +151,7 @@ def get_today_tasks_statistic(message):
 def get_week_tasks_statistic(message):
     db = BotDb('dairy_db.sql')
     week_stat = db.get_task_statistic_week(message.chat.id)
-
+    db.close()
     bot.send_message(message.chat.id, 'Вот важи результаты на текушую неделю')
     for i in week_stat:
         task = i[0]
@@ -152,12 +162,13 @@ def get_week_tasks_statistic(message):
 def get_month_statistic(message):
     db = BotDb('dairy_db.sql')
     month_stat = db.get_task_statistic_month(message.chat.id)
-
+    db.close()
     bot.send_message(message.chat.id, 'Вот важи результаты на текуший месяц')
     for i in month_stat:
         task = i[0]
         time = i[1]
         bot.send_message(message.chat.id, f"На задачу: {task} вы потратили {time} минут")
+
 
 def done_today_tasks(message):
     db = BotDb('dairy_db.sql')
@@ -169,7 +180,9 @@ def done_today_tasks(message):
     markup = types.InlineKeyboardMarkup()
 
     for i in day_tasks:
-        buttons.append(types.InlineKeyboardButton(text=i, callback_data=i))
+        data_string = ' '.join(str(item) for item in day_tasks).replace("(", "").replace(")", "").replace("'", "")
+        data = data_string.replace(", ", "& ")
+        buttons.append(types.InlineKeyboardButton(text=i[0], callback_data=data))
 
     markup.add(*buttons)
     bot.send_message(message.chat.id, 'нажмите на выполненную задачу', reply_markup=markup)

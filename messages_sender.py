@@ -21,7 +21,7 @@ class CurrentHour(Thread):
                 time.sleep(3600)
                 continue
 
-            elif hour == 12:
+            elif hour == 14:
                 send_message = AutoSendMessage()
                 send_message.noon_send()
                 time.sleep(3600)

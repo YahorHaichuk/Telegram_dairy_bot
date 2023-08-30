@@ -55,6 +55,7 @@ class BotDb:
         params = (task[0], chat_id) + tuple(data)
         self.cursor.execute(query, params)
         x = self.cursor.fetchone()
+
         return x[0]
 
     def get_task_range_month(self, task, chat_id):
@@ -79,7 +80,8 @@ class BotDb:
             f'SELECT * FROM tasks WHERE date BETWEEN ? AND ? AND user_id = ? AND is_done = 0',
             (str(today), (str(sunday)), chat_id)
         )
-        return self.cursor.fetchall()
+        x = self.cursor.fetchall()
+        return x
 
     def get_day_tasks(self, chat_id):
         """Today's tasks"""
@@ -96,8 +98,8 @@ class BotDb:
         db_today_tasks = self.cursor.fetchall()
         today_tasks = []
         for i in db_today_tasks:
-            today_tasks.append(i[1])
-
+            x = (i[1], i[2])
+            today_tasks.append(x)
         return today_tasks
 
     def get_month_tasks(self, chat_id):
@@ -112,7 +114,8 @@ class BotDb:
             f'SELECT * FROM tasks WHERE date BETWEEN ? AND ? AND user_id = ? AND is_done = 0',
             (str(today), (str(month_object)), chat_id)
         )
-        return self.cursor.fetchall()
+        x = self.cursor.fetchall()
+        return x
 
     def start(self, chat_id):
         """Adding a task"""
@@ -124,7 +127,6 @@ class BotDb:
             bot.send_message(chat_id, 'Добро пожаловать в котячй ежедневник ваш id успешно добавлен в базу!')
         else:
             bot.send_message(chat_id, f'Добрый день, ваш чат id {chat_id}, желаю продуктивного дня!')
-
         return self.conn.commit()
 
     def task_date(self, text, date, message):
@@ -142,24 +144,22 @@ class BotDb:
             raise ValueError
 
         self.cursor.execute('INSERT INTO tasks (task, date, user_id, elapsed_time, is_done) VALUES (?,?,?,?,?)', data)
-        self.conn.commit()
         return self.conn.commit()
 
     def get_all_users(self):
         """Selecting all users to auto-send a message"""
         self.cursor.execute(f'SELECT user_id FROM users')
         users = self.cursor.fetchall()
-
         return users
 
-    def spent_time_task_add(self, task, duration):
+    def spent_time_task_add(self, task, date, duration):
         """Adding elapsed time to a task when
             pressing the button to complete this task """
         self.cursor.execute(
-            f'UPDATE tasks SET elapsed_time = ? WHERE task = ?', (duration, task)
+            f'UPDATE tasks SET elapsed_time = ? WHERE task = ? AND date = ?', (duration, task, date)
         )
         self.cursor.execute(
-            f'UPDATE tasks SET is_done = 1 WHERE task = ?', (task,)
+            f'UPDATE tasks SET is_done = 1 WHERE task = ? AND date = ?', (task, date)
         )
 
         return self.conn.commit()
@@ -203,7 +203,7 @@ class BotDb:
         except KeyError:
             bot.send_message(user_id, 'Выберите день от сегодняшнего и позже')
 
-            return self.conn.commit()
+            self.conn.commit()
 
     def get_task_editing(self, message, editing_task):
         """Selecting a task to edit"""
@@ -233,7 +233,6 @@ class BotDb:
         self.cursor.execute('''DELETE FROM tasks WHERE task = ? AND date = ?''', (task, date))
 
         self.conn.commit()
-        self.conn.close()
 
     def create_back_up(self, source_db_path, backup_folder):
         """Creates a database backup.
@@ -244,7 +243,7 @@ class BotDb:
 
             # Создаем копию файла базы данных в папке с резервными копиями
             today = datetime.today().date()
-            backup_file_path = os.path.join(backup_folder, f'backup_database_{today}.db')
+            backup_file_path = os.path.join(backup_folder, f'backup_database_{today}.sql')
             shutil.copyfile(source_db_path, backup_file_path)
             bot.send_message(927883641, "Резервная копия создана успешно!")
         except Exception as e:
