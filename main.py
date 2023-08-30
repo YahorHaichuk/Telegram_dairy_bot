@@ -1,5 +1,4 @@
 import datetime
-import sys
 
 from auxiliary_functions import duration_in_minutes, get_all_days_of_current_month
 from bot_handlers import *

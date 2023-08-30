@@ -101,7 +101,6 @@ def days_until_end_of_month():
 
 
 def days_until_end_of_month_list():
-    locale.setlocale(locale.LC_TIME, 'ru_RU.UTF-8')  # Устанавливаем русскую локаль
     today = datetime.datetime.today()
     year = today.year
     month = today.month
@@ -113,26 +112,26 @@ def days_until_end_of_month_list():
     remaining_days = (last_day_of_month - today).days + 1
     days_list = [today.strftime("%Y-%m-%d")]
 
-    for i in range(1, remaining_days + 1):
+    for i in range(0, remaining_days + 1):
         day = today + timedelta(days=i)
         day_name = day.strftime('%A')
-        if day_name == 'пятница':
+        if day_name == 'Friday':
             day_name = 'Пт'
-        elif day_name == 'суббота':
+        elif day_name == 'Saturday':
             day_name = 'Сб'
-        elif day_name == 'воскресенье':
+        elif day_name == 'Sunday':
             day_name = 'Вс'
-        elif day_name == 'понедельник':
+        elif day_name == 'Monday':
             day_name = 'Пн'
-        elif day_name == 'вторник':
+        elif day_name == 'Tuesday':
             day_name = 'Вт'
-        elif day_name == 'среда':
+        elif day_name == 'Wednesday':
             day_name = 'Ср'
-        elif day_name == 'четверг':
+        elif day_name == 'Thursday':
             day_name = 'Чт'
 
         days_list.append(f"{day_name} {day.strftime('%m-%d')}")
-
+    days_list.pop(0)
     return days_list
 
 
@@ -167,3 +166,6 @@ def get_all_days_of_current_month():
     _, num_days = calendar.monthrange(year, month)
     days_list = [f"{year}-{month:02d}-{day:02d}" for day in range(1, num_days + 1)]
     return days_list
+
+
+print(days_until_end_of_month_list())
