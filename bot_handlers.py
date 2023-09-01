@@ -3,10 +3,11 @@ import sys
 from telebot import types
 
 from auxiliary_functions import get_week_days_list
+from config import TOKEN
 from database import BotDb
 import telebot
 
-TOKEN = '6193050640:AAGxCsSYcN9ykAf6N29Z-bcLCYUFqQYJ7YQ'
+
 bot = telebot.TeleBot(TOKEN)
 
 

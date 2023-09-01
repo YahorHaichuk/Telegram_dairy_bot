@@ -5,6 +5,7 @@ from datetime import datetime
 
 import shutil
 import os
+from config import TOKEN
 
 import telebot
 
@@ -12,7 +13,7 @@ import telebot
 from auxiliary_functions import get_week_days_list, convert_to_datetime, get_week_days_dict, days_until_end_of_month, \
     get_days_until_today, get_days_of_current_week
 
-TOKEN = '6193050640:AAGxCsSYcN9ykAf6N29Z-bcLCYUFqQYJ7YQ'
+
 bot = telebot.TeleBot(TOKEN)
 
 recurring_days_list = []

@@ -5,7 +5,8 @@ import telebot
 from telebot import types
 
 from database import BotDb
-TOKEN = '6193050640:AAGxCsSYcN9ykAf6N29Z-bcLCYUFqQYJ7YQ'
+from config import TOKEN
+
 bot = telebot.TeleBot(TOKEN)
 
 

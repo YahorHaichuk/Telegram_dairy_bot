@@ -2,9 +2,8 @@ import calendar
 import datetime
 from datetime import timedelta
 import telebot
-import locale
+from config import TOKEN
 
-TOKEN = '6193050640:AAGxCsSYcN9ykAf6N29Z-bcLCYUFqQYJ7YQ'
 
 bot = telebot.TeleBot(TOKEN)
 today = datetime.date.today()

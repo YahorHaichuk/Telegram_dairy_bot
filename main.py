@@ -7,8 +7,8 @@ import telebot
 
 from messages_sender import CurrentHour
 from auxiliary_functions import days_until_end_of_month_list
+from config import TOKEN
 
-TOKEN = '6193050640:AAGxCsSYcN9ykAf6N29Z-bcLCYUFqQYJ7YQ'
 bot = telebot.TeleBot(TOKEN)
 
 days_of_week = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
