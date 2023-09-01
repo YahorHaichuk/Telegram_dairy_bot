@@ -29,8 +29,8 @@ def week_tasks_handler(message):
 @bot.message_handler(commands=['backup'])
 #MANUAL CALL DB backup
 def create_back_up(message):
-    source_db_path = 'D:\DEVELOP\cats_dairy\dairy_db.sql'  # Path to source database
-    backup_folder = 'D:\DEVELOP\cats_dairy\db_backup'  # Path to the backup folder
+    source_db_path = '/app/dairy_db.sql'  # Path to source database
+    backup_folder = '/app/db_backup'  # Path to the backup folder
     backup = BotDb('dairy_db.sql')
     backup.create_back_up(source_db_path=source_db_path, backup_folder=backup_folder)
 
