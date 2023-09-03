@@ -165,6 +165,3 @@ def get_all_days_of_current_month():
     _, num_days = calendar.monthrange(year, month)
     days_list = [f"{year}-{month:02d}-{day:02d}" for day in range(1, num_days + 1)]
     return days_list
-
-
-print(days_until_end_of_month_list())
