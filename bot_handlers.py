@@ -183,7 +183,7 @@ def done_today_tasks(message):
     for i in day_tasks:
         data_string = ' '.join(str(item) for item in day_tasks).replace("(", "").replace(")", "").replace("'", "")
         data = data_string.replace(", ", "& ")
-        buttons.append(types.InlineKeyboardButton(text=i[0], callback_data=data))
+        buttons.append(types.InlineKeyboardButton(text=i[0][:12], callback_data=data))
 
     markup.add(*buttons)
     if len(buttons) == 0:
