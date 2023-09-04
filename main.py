@@ -424,6 +424,6 @@ def send_time():
     hours.start()
 
 
-#send_time()
+send_time()
 
 bot.polling(none_stop=True)

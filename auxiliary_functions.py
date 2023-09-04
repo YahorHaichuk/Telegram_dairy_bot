@@ -212,6 +212,3 @@ def get_next_week_days_dict():
         days_dict[key] = value
     return days_dict
 
-
-next_week_days = get_next_week_days_dict()
-print(next_week_days)
