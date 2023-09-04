@@ -271,18 +271,31 @@ def done_today_callback(call):
     bot.register_next_step_handler(call.message, add_start_time, task_time_add=task_time_add, date_data=date_data)
 
 
-def callback_recurring_tasks_many_words_handler(call):
+def callback_recurring_tasks_week_handler(call):
     """Обработка повторяющихя задач периодом в 1 неделю."""
     current_task = call.data.split('*')[1:2][0]
 
     markup = types.InlineKeyboardMarkup(row_width=3)
     buttons = [types.InlineKeyboardButton(day, callback_data=f'{current_task} * {day}') for day in days]
+    next_week_button = types.InlineKeyboardButton('Следующая неделя', callback_data=f'{current_task} *next_week_recurring')
+    buttons.append(next_week_button)
     markup.add(*buttons)
+
     text = '''Выберите дни недели в которые будет повторятся ваша задача от сегодняшнего дня и до конца недели.\n
-            Вы находитесь в режиме выбора дней повтора задач на текущую неделю.\n
-            Что бы добавить повторяющмеся задачи на следующую неделю сделайте это в понедельник,
-            или добавте задачу в ручную с помошью команды /start\n
-            Либо выберите период повторения месяц'''
+            Вы находитесь в режиме выбора дней повтора задач на текущую неделю.'''
+    bot.edit_message_text(text, call.message.chat.id, call.message.message_id, reply_markup=markup)
+
+
+def callback_recurring_tasks_next_week_handler(call):
+    """Обработка повторяющихя задач периодом в 1 неделю."""
+    current_task = call.data.split('*')[0:1][0].strip()
+
+    markup = types.InlineKeyboardMarkup(row_width=3)
+    buttons = [types.InlineKeyboardButton(day, callback_data=f'{current_task} * {day} *next') for day in days]
+    markup.add(*buttons)
+
+    text = '''Выберите дни недели в которые будет повторятся ваша задача от понедельника и до конца недели.\n
+            Вы находитесь в режиме выбора дней повтора задач на следующую неделю.'''
     bot.edit_message_text(text, call.message.chat.id, call.message.message_id, reply_markup=markup)
 
 
@@ -295,9 +308,19 @@ def recurring_tasks_week(call):
     db.recurring_tasks_week(task, day, call.message.chat.id)
 
 
+def recurring_tasks_next_week(call):
+    db = BotDb('dairy_db.sql')
+    day = call.data.split('*')[1].replace(" ", "")
+
+    task = call.data.split('*')[0].strip()
+
+    db.recurring_tasks_next_week(task, day, call.message.chat.id)
+
+
+
 @bot.callback_query_handler(func=lambda call: True)
 def all_callbacks_handler(call):
-    x = call.data.split("& ")
+    x =  call.data.split('*')
     db = BotDb('dairy_db.sql')
     task_text_range_week = None
     task_text_range_month = None
@@ -330,18 +353,28 @@ def all_callbacks_handler(call):
         if (task_text_range_week is not None
                 and call.data.split('*')[1] == task_text_range_week
                 and call.data.split('*')[2].strip() == 'week'):
-            callback_recurring_tasks_many_words_handler(call)  # repeat period week
+            callback_recurring_tasks_week_handler(call)  # repeat period week
     if len(call.data.split('*')) == 3:
         if (task_text_range_month is not None and
                 call.data.split('*')[1].strip() == task_text_range_month and call.data.split('*')[
                     2].strip() == 'month'):
             cycle_month(call)  # repeat period month
 
-    if len(call.data.split('*')) > 1 and call.data.split('*')[1].strip() in days: #calls the function to record repeated tasks for the week
+    if 3 > len(call.data.split('*')) > 1 and call.data.split('*')[1].strip() in days: #calls the function to record repeated tasks for the week
         if (BotDb('dairy_db.sql').get_task_range_week(
                 call.data.split('*')[0].strip(), call.message.chat.id)) and (
                 call.data.split('*')[1].strip() in days):
             recurring_tasks_week(call)
+    if len(call.data.split('*')) > 1 and call.data.split('*')[1].strip() == 'next_week_recurring':
+        if (BotDb('dairy_db.sql').get_task_range_week(
+                call.data.split('*')[0].strip(), call.message.chat.id)):
+            callback_recurring_tasks_next_week_handler(call)
+    if (len(call.data.split('*')) > 2 and call.data.split('*')[1].strip() in days and
+    call.data.split('*')[2].strip() == 'next'): #calls the function to record repeated tasks for the week
+        if (BotDb('dairy_db.sql').get_task_range_week(
+                call.data.split('*')[0].strip(), call.message.chat.id)) and (
+                call.data.split('*')[1].strip() in days):
+            recurring_tasks_next_week(call)
 
     if call.data == 'only_one':#adds a task without repetition
         bot.send_message(call.message.chat.id, 'Задача добавлена')
@@ -394,4 +427,3 @@ def send_time():
 #send_time()
 
 bot.polling(none_stop=True)
-

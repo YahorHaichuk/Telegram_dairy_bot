@@ -11,8 +11,7 @@ import telebot
 
 
 from auxiliary_functions import get_week_days_list, convert_to_datetime, get_week_days_dict, days_until_end_of_month, \
-    get_days_until_today, get_days_of_current_week
-
+    get_days_until_today, get_days_of_current_week, get_next_week_days_dict
 
 bot = telebot.TeleBot(TOKEN)
 
@@ -186,6 +185,26 @@ class BotDb:
 
             return self.conn.commit()
 
+    def recurring_tasks_next_week(self, task, days, user_id):
+        """Adding a recurring task for the selected day of the week"""
+        week_days = get_next_week_days_dict()
+        try:
+            date = week_days[days]
+            task_in_day = self.cursor.execute('SELECT task, date FROM tasks WHERE task = ? AND date = ?', (task, date))
+            result = task_in_day.fetchone()
+
+            if days in week_days.keys() and not result:
+                self.cursor.execute('INSERT INTO tasks (task, date, user_id, elapsed_time, is_done) VALUES (?,?,?,?,?)',
+                                    (task, week_days[days], user_id, 0, 0))
+                self.conn.commit()
+                bot.send_message(user_id, f'Задача {task} добавлена на день {days}')
+            else:
+                bot.send_message(user_id, 'Вы уже выбрали этот день')
+
+        except KeyError:
+            bot.send_message(user_id, 'Выберите день от сегодняшнего и позже')
+
+            return self.conn.commit()
     def recurring_tasks_month(self, task, day, user_id):
         """Adding a recurring task for the selected day of the week"""
         month_days = days_until_end_of_month()

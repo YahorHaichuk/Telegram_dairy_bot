@@ -165,3 +165,53 @@ def get_all_days_of_current_month():
     _, num_days = calendar.monthrange(year, month)
     days_list = [f"{year}-{month:02d}-{day:02d}" for day in range(1, num_days + 1)]
     return days_list
+
+
+def get_next_week_days_list():
+    """Returns the days of the week for the next week in date format."""
+    today = datetime.datetime.now()
+    current_weekday = today.weekday()
+    days_until_next_monday = (7 - current_weekday) % 7
+    if current_weekday == 0:
+        days_until_next_monday = 7
+    next_monday = today + timedelta(days=days_until_next_monday)
+
+    time_range = []
+    for _ in range(7):
+        time_range.append(next_monday)
+        next_monday += timedelta(days=1)
+
+    formatted_list = [dt.strftime('%Y-%m-%d') for dt in time_range]
+
+    return formatted_list
+
+
+def get_next_week_days_dict():
+    """Returns the remaining days of the week until the end of the week in date format."""
+    current_weekday = today.weekday()
+    days_until_next_monday = (7 - current_weekday) % 7
+    if current_weekday == 0:
+        days_until_next_monday = 7
+    next_monday = today + timedelta(days=days_until_next_monday)
+
+    time_range = []
+    days = []
+    for _ in range(7):
+        time_range.append(next_monday)
+        next_monday += timedelta(days=1)
+
+    formatted_list = [dt.strftime('%Y-%m-%d') for dt in time_range]
+
+    for day in formatted_list:
+        days.append(day)
+
+    days_str = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']
+    merged_lists = list(zip(days_str[::-1], days[::-1]))
+    days_dict = {}
+    for key, value in merged_lists:
+        days_dict[key] = value
+    return days_dict
+
+
+next_week_days = get_next_week_days_dict()
+print(next_week_days)

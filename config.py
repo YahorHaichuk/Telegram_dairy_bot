@@ -1,2 +1,3 @@
 import os
-TOKEN = os.getenv("TOKEN")
+TOKEN = '6193050640:AAGxCsSYcN9ykAf6N29Z-bcLCYUFqQYJ7YQ'
+#TOKEN = os.getenv("TOKEN")

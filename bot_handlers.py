@@ -186,5 +186,8 @@ def done_today_tasks(message):
         buttons.append(types.InlineKeyboardButton(text=i[0], callback_data=data))
 
     markup.add(*buttons)
-    bot.send_message(message.chat.id, 'нажмите на выполненную задачу', reply_markup=markup)
+    if len(buttons) == 0:
+        bot.send_message(message.chat.id, 'На сегодня у вас нет задач')
+    else:
+        bot.send_message(message.chat.id, 'нажмите на выполненную задачу', reply_markup=markup)
 
