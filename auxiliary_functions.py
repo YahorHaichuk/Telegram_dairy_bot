@@ -129,7 +129,7 @@ def days_until_end_of_month_list():
         elif day_name == 'Thursday':
             day_name = 'Чт'
 
-        days_list.append(f"{day_name} {day.strftime('%m-%d')}")
+        days_list.append(f"{day_name} {day.strftime('%d')}")
     days_list.pop(0)
     return days_list
 
