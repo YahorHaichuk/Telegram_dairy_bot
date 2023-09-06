@@ -4,6 +4,7 @@ from datetime import datetime
 import telebot
 from telebot import types
 
+from bot_handlers import copy_db_from_container_to_host
 from database import BotDb
 from config import TOKEN
 
@@ -34,16 +35,20 @@ class CurrentHour(Thread):
                 time.sleep(3600)
                 continue
 
-            elif hour == 14:
+            elif hour == 21:
                 send_message = AutoSendMessage()
                 send_message.day_end()
                 time.sleep(3600)
                 continue
             elif hour == 23:
-                source_db_path ='D:\DEVELOP\cats_dairy\dairy_db.sql'   #Путь к исходной базе данных
-                backup_folder = 'D:\DEVELOP\cats_dairy\db_backup'  #Путь к папке с резервными копиями
+                source_db_path ='/app/dairy_db.sql'   #Путь к исходной базе данных
+                backup_folder = '/app/db_backup'  #Путь к папке с резервными копиями
                 backup = BotDb('dairy_db.sql')
                 backup.create_back_up(source_db_path=source_db_path, backup_folder=backup_folder)
+                time.sleep(60)
+                copy_db_from_container_to_host()
+                time.sleep(28770)
+                continue
 
 
 class AutoSendMessage:

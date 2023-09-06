@@ -1,4 +1,5 @@
 import sys
+from datetime import datetime
 
 from telebot import types
 
@@ -191,3 +192,18 @@ def done_today_tasks(message):
     else:
         bot.send_message(message.chat.id, 'нажмите на выполненную задачу', reply_markup=markup)
 
+
+def copy_db_from_container_to_host(message=None):
+    today = datetime.today().date()
+    db = BotDb('dairy_db.sql')
+    container_id = db.find_container_id_by_name("cats_dairy-bot-1")
+    if not container_id:
+        bot.send_message(927883641, "ID контейнера не обнаружен")
+
+    source_path = f'backup_database_{today}.sql'
+    destination_path = '/home/ubuntu/Telegram_dairy_bot/db_backup'
+    result = db.copy_file_from_container(container_id, source_path, destination_path)
+    if result:
+        bot.send_message(927883641, "Бэкап базы данных успешно скопирован из контейнера")
+    else:
+        bot.send_message(927883641, "Бэкап базы данных не удалось скопировать")

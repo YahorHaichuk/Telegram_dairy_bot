@@ -424,6 +424,7 @@ def send_time():
     hours.start()
 
 
-send_time()
+if __name__ == '__main__':
+    send_time()
 
-bot.polling(none_stop=True)
+    bot.polling(none_stop=True)

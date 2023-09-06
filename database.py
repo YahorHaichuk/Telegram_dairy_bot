@@ -5,6 +5,7 @@ from datetime import datetime
 
 import shutil
 import os
+import docker
 from config import TOKEN
 
 import telebot
@@ -368,9 +369,43 @@ class BotDb:
         summ = sum(value[0] for value in total_time)
         return summ
 
+    def find_container_id_by_name(self, container_name):
+        try:
+            # Создаем клиент Docker
+            client = docker.from_env()
+            # Получаем список контейнеров
+            containers = client.containers.list()
+            # Поиск контейнера по имени
+            for container in containers:
+                if container.name == container_name:
+                    return container.id
+            # Если контейнер не найден, возвращаем None
+            return None
+
+        except Exception as e:
+            print(f"Ошибка: {e}")
+            return None
+
     def delete_tasks_by_user_id(self, user_id):
         self.cursor.execute("DELETE FROM tasks WHERE user_id = ?", (user_id,))
         self.conn.commit()
+    def copy_file_from_container(self, container_id, source_path, destination_path):
+        try:
+            # Создаем клиент Docker
+            client = docker.from_env()
+            # Копируем файл из контейнера во временный файл на хосте
+            with open(destination_path, 'wb') as f:
+                data, _ = client.containers.get(container_id).get_archive(source_path)
+                for chunk in data:
+                    f.write(chunk)
+            # Закрываем клиент Docker
+            client.close()
+            # Возвращаем путь к скопированному файлу на хосте
+            return destination_path
+
+        except Exception as e:
+            print(f"Ошибка: {e}")
+            return None
 
 
 

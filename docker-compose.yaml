@@ -2,7 +2,7 @@ services:
   db:
     image: nouchka/sqlite3:latest
     volumes:
-      - db_data:/var/lib/sqlite/
+      - ./dairy_db.sql:/var/lib/sqlite/
     restart: on-failure
     env_file:
       - ./.env
@@ -15,7 +15,3 @@ services:
     restart: always
     depends_on:
       - db
-
-
-volumes:
-  db_data:
