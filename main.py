@@ -21,6 +21,10 @@ def create_db(message):
     db.create_db(message.chat.id)
 
 
+@bot.message_handler(commands=['copy_db'])
+def copy_db(message):
+    copy_db_from_container_to_host()
+
 @bot.message_handler(commands=['week'])
 def week_tasks_handler(message):
     get_user_week_tasks(message)

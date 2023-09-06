@@ -383,7 +383,7 @@ class BotDb:
             return None
 
         except Exception as e:
-            print(f"Ошибка: {e}")
+            bot.send_message(927883641, f'Сбой при поиске ID контейнера для копирования:\n {e}')
             return None
 
     def delete_tasks_by_user_id(self, user_id):
@@ -404,7 +404,7 @@ class BotDb:
             return destination_path
 
         except Exception as e:
-            print(f"Ошибка: {e}")
+            bot.send_message(927883641, f'Сбой при копировании резервной копии БД:\n {e}')
             return None
 
 
