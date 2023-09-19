@@ -24,7 +24,10 @@ class BotDb:
 
     def __init__(self, db_name):
         """Initialize database connection."""
-        self.conn = sqlite3.connect(db_name)
+        self.db_name = db_name
+
+    def connect(self):
+        self.conn = sqlite3.connect(self.db_name)
         self.cursor = self.conn.cursor()
 
     def create_db(self, chat_id):

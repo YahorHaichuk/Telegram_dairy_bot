@@ -10,12 +10,13 @@ services:
   bot:
     build: .
     command: sh -c "python -m main"
+    volumes:
+      - .dairy_db.sql:/var/lib/sqlite/
     env_file:
       - ./.env
     restart: always
     depends_on:
       - db
 
-
-volumes:
-  db_data:
+  volumes:
+    db_data:
