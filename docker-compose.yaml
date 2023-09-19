@@ -18,5 +18,5 @@ services:
     depends_on:
       - db
 
-  volumes:
-    db_data:
+volumes:
+  db_data:
