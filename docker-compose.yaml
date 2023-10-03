@@ -2,7 +2,7 @@ services:
   db:
     image: nouchka/sqlite3:latest
     volumes:
-      - db_data:/var/lib/sqlite/
+      - db_data:/var/lib/sqlite/dairy_db.sql
     restart: on-failure
     env_file:
       - ./.env
@@ -10,11 +10,11 @@ services:
   bot:
     build: .
     command: sh -c "python -m main"
-    volumes:
-      - .dairy_db.sql:/var/lib/sqlite/
     env_file:
       - ./.env
     restart: always
+    volumes:
+      - ./:/app/
     depends_on:
       - db
 
