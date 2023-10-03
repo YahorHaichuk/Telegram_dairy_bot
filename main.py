@@ -262,8 +262,8 @@ def month_cycle_add(call):
 )
 def done_today_callback(call):
     """Обработчик колбэка на выполнение сегодняшней задачи."""
-    task_time_add = call.data.split("& ")[0]
-    date_data = call.data.split("& ")[1]
+    task_time_add = call.data.split("&")[0]
+    date_data = call.data.split("&")[1]
     bot.send_message(call.message.chat.id,
                      f''' Ведите время в которое вы начали выполнять задачу {task_time_add}\nв формате "ЧЧ:ММ"''')
 
@@ -352,7 +352,8 @@ def all_callbacks_handler(call):
         task_text_range_month = None
 
     if (
-            call.data is not None and today_tasks is not None and call.data.split("& ")[0] in today_tasks):  #complete today's task
+            call.data is not None and today_tasks is not None and call.data.split("&")[0] in today_tasks):  #complete today's task
+            x = call.data
             done_today_callback(call)
     if len(call.data.split('*')) == 3:
         if (task_text_range_week is not None
