@@ -247,9 +247,10 @@ def confirmation_delete_all_tasks_by_user_id(message):
 
 def month_cycle_add(call):
     db = BotDb('dairy_db.sql')
-    current_year = str(datetime.datetime.now().year) + '-'
+    current_year = str(datetime.now().year) + '-'
+    current_month = str(datetime.now().month) + '-'
     day = call.data.split('*')[1][4:]
-    current_date = current_year + day
+    current_date = current_year + current_month + day
     task = call.data.split('*')[0].strip()
 
     db.recurring_tasks_month(task, current_date.strip(), call.message.chat.id)
