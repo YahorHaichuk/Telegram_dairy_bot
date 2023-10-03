@@ -2,4 +2,4 @@
 .env
 venv/
 .idea
-*.sql
+dairy_db.sql
