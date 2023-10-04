@@ -1,9 +1,10 @@
 import calendar
 import datetime
 from datetime import timedelta
-import telebot
-from config import TOKEN
 
+import telebot
+
+from config import TOKEN
 
 bot = telebot.TeleBot(TOKEN)
 today = datetime.date.today()

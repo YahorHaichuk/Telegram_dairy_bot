@@ -1,19 +1,17 @@
 import calendar
+import os
+import shutil
 import sqlite3
 import sys
 from datetime import datetime
 
-import shutil
-import os
-from config import TOKEN
-
 import telebot
 
-from auxiliary_functions import (get_week_days_list, convert_to_datetime,
-                                 get_week_days_dict, days_until_end_of_month,
-                                 get_days_until_today,
+from auxiliary_functions import (convert_to_datetime, days_until_end_of_month,
                                  get_days_of_current_week,
-                                 get_next_week_days_dict)
+                                 get_days_until_today, get_next_week_days_dict,
+                                 get_week_days_dict, get_week_days_list)
+from config import TOKEN
 
 bot = telebot.TeleBot(TOKEN)
 

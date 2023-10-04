@@ -1,12 +1,13 @@
 import time
-from threading import Thread
 from datetime import datetime
+from threading import Thread
+
 import telebot
 from telebot import types
 
 from bot_handlers import copy_db_from_container_to_host
-from database import BotDb
 from config import TOKEN
+from database import BotDb
 
 bot = telebot.TeleBot(TOKEN)
 

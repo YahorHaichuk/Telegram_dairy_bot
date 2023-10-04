@@ -1,21 +1,20 @@
 import datetime
 import sys
 
-from auxiliary_functions import (duration_in_minutes,
-                                 get_all_days_of_current_month)
-from bot_handlers import (start, task, task_date, get_user_week_tasks,
-                          get_task_delete, task_delete, get_editing_task_db,
-                          get_day_tasks, get_month_tasks,
-                          get_today_tasks_statistic, get_week_tasks_statistic,
-                          get_month_statistic, done_today_tasks,
-                          )
-from database import BotDb
 import telebot
 from telebot import types
 
-from messages_sender import CurrentHour
-from auxiliary_functions import days_until_end_of_month_list
+from auxiliary_functions import (days_until_end_of_month_list,
+                                 duration_in_minutes,
+                                 get_all_days_of_current_month)
+from bot_handlers import (done_today_tasks, get_day_tasks, get_editing_task_db,
+                          get_month_statistic, get_month_tasks,
+                          get_task_delete, get_today_tasks_statistic,
+                          get_user_week_tasks, get_week_tasks_statistic, start,
+                          task, task_date, task_delete)
 from config import TOKEN
+from database import BotDb
+from messages_sender import CurrentHour
 
 bot = telebot.TeleBot(TOKEN)
 
