@@ -20,7 +20,8 @@ def duration_in_minutes(start_time, end_time):
 
 
 def get_week_days_list():
-    """Returns the remaining days of the week until the end of the week in date format."""
+    """Returns the remaining days of the week until the
+    end of the week in date format."""
     current_weekday = today.weekday()
     days_until_next_monday = (7 - current_weekday) % 7
     if current_weekday == 0:
@@ -43,7 +44,8 @@ def get_week_days_list():
 
 
 def get_week_days_dict():
-    """Returns the remaining days of the week until the end of the week in date format."""
+    """Returns the remaining days of the week until
+    the end of the week in date format."""
     current_weekday = today.weekday()
     days_until_next_monday = (7 - current_weekday) % 7
     if current_weekday == 0:
@@ -75,13 +77,14 @@ def convert_to_datetime(message, date):
         date = datetime.datetime.strptime(date, '%Y-%m-%d')
         return date.date()
     except ValueError:
-        error = 'Пожалуйста укажити дату так как это показано в примере, добавление задачи сброшено, начните сначала'
+        error = '''Пожалуйста укажите дату так как это показано в примере,
+                добавление задачи сброшено, начните сначала'''
         bot.send_message(message.chat.id, error)
-        #TODO закинуть эту фунцию с файл с добавочными и переделать добавление задачи
 
 
 def days_until_end_of_month():
-    """Get all the remaining days of the current month starting from today as a list"""
+    """Get all the remaining days of the
+    current month starting from today as a list"""
     today = datetime.datetime.today()
     year = today.year
     month = today.month
@@ -91,7 +94,9 @@ def days_until_end_of_month():
     last_day_of_month = first_day_next_month - timedelta(days=1)
 
     remaining_days = (last_day_of_month - today).days + 1
-    days_list = [today + timedelta(days=i) for i in range(1, remaining_days + 1)]
+    days_list = [
+        today + timedelta(days=i) for i in range(1, remaining_days + 1)
+    ]
     x = [today.strftime("%Y-%m-%d")]
     for d in days_list:
         x.append(d.strftime("%Y-%m-%d"))
@@ -149,11 +154,11 @@ def get_days_until_today():
 
 def get_days_of_current_week():
     today = datetime.datetime.today()
-    current_weekday = today.weekday()  # Получаем номер дня недели (понедельник - 0, воскресенье - 6)
-    start_of_week = today - timedelta(days=current_weekday)  # Находим первый день текущей недели
+    current_weekday = today.weekday()
+    start_of_week = today - timedelta(days=current_weekday)
 
-    days_of_week = [start_of_week + timedelta(days=i) for i in range(7)]  # Список дней текущей недели
-    days_strings = [day.strftime('%Y-%m-%d') for day in days_of_week]  # Преобразование дат в строки
+    days_of_week = [start_of_week + timedelta(days=i) for i in range(7)]
+    days_strings = [day.strftime('%Y-%m-%d') for day in days_of_week]
 
     return days_strings
 
@@ -163,7 +168,9 @@ def get_all_days_of_current_month():
     year = today.year
     month = today.month
     _, num_days = calendar.monthrange(year, month)
-    days_list = [f"{year}-{month:02d}-{day:02d}" for day in range(1, num_days + 1)]
+    days_list = [
+        f"{year}-{month:02d}-{day:02d}" for day in range(1, num_days + 1)
+    ]
     return days_list
 
 
@@ -187,7 +194,8 @@ def get_next_week_days_list():
 
 
 def get_next_week_days_dict():
-    """Returns the remaining days of the week until the end of the week in date format."""
+    """Returns the remaining days of the
+    week until the end of the week in date format."""
     current_weekday = today.weekday()
     days_until_next_monday = (7 - current_weekday) % 7
     if current_weekday == 0:
@@ -211,4 +219,3 @@ def get_next_week_days_dict():
     for key, value in merged_lists:
         days_dict[key] = value
     return days_dict
-
