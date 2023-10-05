@@ -65,7 +65,7 @@ class BotDb:
 
     def get_task_range_month(self, task, chat_id):
         """Selects a task from the user
-        to check the condition for adding a repeat per week"""
+        to check the condition for adding a repeat per month"""
         task = task.split('* ')
         if task[0][0] == '*':
             task[0] = task[0][1:]
@@ -297,6 +297,20 @@ class BotDb:
             FROM tasks
             WHERE task = ? AND user_id = ? AND date BETWEEN ? AND ?""",
             (editing_task, message.chat.id, str(today), str(sunday))
+        )
+        x = self.cursor.fetchall()
+        return x
+
+    def get_task_deleting_month(self, message, editing_task):
+        """Selecting a task to edit"""
+        today = datetime.today().date()
+        month = days_until_end_of_month()
+        last_month_day = month[-1]
+        self.cursor.execute(
+            """SELECT task, date
+            FROM tasks
+            WHERE task = ? AND user_id = ? AND date BETWEEN ? AND ?""",
+            (editing_task, message.chat.id, str(today), str(last_month_day))
         )
         x = self.cursor.fetchall()
         return x

@@ -86,15 +86,14 @@ def convert_to_datetime(message, date):
 def days_until_end_of_month():
     """Get all the remaining days of the
     current month starting from today as a list"""
-    today = datetime.datetime.today()
     year = today.year
     month = today.month
     next_month = month + 1 if month < 12 else 1
     next_year = year if month < 12 else year + 1
-    first_day_next_month = datetime.datetime(next_year, next_month, 1)
+    first_day_next_month = datetime.date(next_year, next_month, 1)
     last_day_of_month = first_day_next_month - timedelta(days=1)
 
-    remaining_days = (last_day_of_month - today).days + 1
+    remaining_days = (last_day_of_month - today).days
     days_list = [
         today + timedelta(days=i) for i in range(1, remaining_days + 1)
     ]
@@ -106,15 +105,14 @@ def days_until_end_of_month():
 
 
 def days_until_end_of_month_list():
-    today = datetime.datetime.today()
     year = today.year
     month = today.month
     next_month = month + 1 if month < 12 else 1
     next_year = year if month < 12 else year + 1
-    first_day_next_month = datetime.datetime(next_year, next_month, 1)
+    first_day_next_month = datetime.date(next_year, next_month, 1)
     last_day_of_month = first_day_next_month - timedelta(days=1)
 
-    remaining_days = (last_day_of_month - today).days + 1
+    remaining_days = (last_day_of_month - today).days
     days_list = [today.strftime("%Y-%m-%d")]
 
     for i in range(0, remaining_days + 1):
@@ -141,20 +139,19 @@ def days_until_end_of_month_list():
 
 
 def get_days_until_today():
-    today = datetime.datetime.today()
     first_day_of_month = today.replace(day=1)
     days = []
 
     current_day = first_day_of_month
     while current_day <= today:
-        days.append(current_day.date().strftime("%Y-%m-%d"))
+        days.append(current_day.strftime("%Y-%m-%d"))
         current_day += timedelta(days=1)
 
     return days
 
 
 def get_days_of_current_week():
-    today = datetime.datetime.today()
+    #today = datetime.datetime.today()
     current_weekday = today.weekday()
     start_of_week = today - timedelta(days=current_weekday)
 
@@ -165,7 +162,7 @@ def get_days_of_current_week():
 
 
 def get_all_days_of_current_month():
-    today = datetime.datetime.today()
+    #today = datetime.datetime.today()
     year = today.year
     month = today.month
     _, num_days = calendar.monthrange(year, month)
@@ -177,7 +174,7 @@ def get_all_days_of_current_month():
 
 def get_next_week_days_list():
     """Returns the days of the week for the next week in date format."""
-    today = datetime.datetime.now()
+    #today = datetime.datetime.now()
     current_weekday = today.weekday()
     days_until_next_monday = (7 - current_weekday) % 7
     if current_weekday == 0:

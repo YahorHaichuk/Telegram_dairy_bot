@@ -14,7 +14,6 @@ from bot_handlers import (done_today_tasks, get_day_tasks, get_editing_task_db,
                           task, task_date, task_delete)
 from config import TOKEN
 from database import BotDb
-from messages_sender import CurrentHour
 
 bot = telebot.TeleBot(TOKEN)
 
@@ -72,12 +71,11 @@ def cycle_month(call):
         ) for day in days_list
     ]
     markup.add(*buttons)
-    text = '''Выберите дни недели
+    text = '''Выберите дни 
     в которые будет повторятся ваша задача от сегодняшнего дня
     и до конца месяца.\n
-               Вы находитесь в режиме выбора дней повтора задач
-               на текущий месяц.\n
-               '''
+    Вы находитесь в режиме выбора дней повтора задач
+    на текущий месяц.\n'''
     bot.edit_message_text(
         text, call.message.chat.id,
         call.message.message_id,
@@ -89,6 +87,8 @@ def get_task_delete_handler(message):
     get_task_delete(message)
 
     bot.register_next_step_handler(message, task_delete_handler)
+
+
 
 
 def task_delete_handler(message):
@@ -559,12 +559,6 @@ def help_handler(message):
 при нажатии кнопки меню всплывет список доступных команд'''
 
     bot.send_message(message.chat.id, text)
-
-
-def send_time():
-
-    hours = CurrentHour()
-    hours.start()
 
 
 if __name__ == '__main__':
