@@ -69,9 +69,10 @@ def get_user_week_tasks(message):
         'на этой неделе вам нужно сделать следующик задачи:'
     )
     for el in week_tasks:
+        bot.send_message(message.chat.id, f'{el[1]}')
         bot.send_message(
             message.chat.id,
-            f'Задачу: {el[1]} нужно сделать: {el[2]}'
+            f'дата выполнения этой задачи {el[2]}'
         )
 
 
@@ -84,7 +85,7 @@ def get_task_delete(message):
 def task_delete(message):
     db = BotDb('dairy_db.sql')
     deleting_task_text = message.text
-    result = db.get_task_deleting_month(message, deleting_task_text)
+    result = db.get_task_editing(message, deleting_task_text)
     buttons = []
     markup = types.InlineKeyboardMarkup()
     db.close()
@@ -95,16 +96,16 @@ def task_delete(message):
 
     for i in result:
         buttons.append(types.InlineKeyboardButton(
-            f'{i[1][-5:]}',
+            f'{i[1]}',
             callback_data=f' *task_delete* {i[0]} * {i[1]}'
         )
         )
 
     markup.add(*buttons)
     text = f'''задача для удаления {result[0][0]}
-    обнаружена в следующих днях на ближайший месяц
-    пожалуйста выберите день
-    в который вы хотите удалить данную задачу'''
+    обнаруженв в следующих днях на ближайжую неделю
+            пожалуйста выберите день
+            в который вы хотите удалить данную задачу'''
     if result is not None:
         bot.send_message(message.chat.id, text, reply_markup=markup)
     else:
@@ -169,10 +170,10 @@ def get_month_tasks(message):
     day_tasks = db.get_month_tasks(message.chat.id)
     db.close()
     for el in day_tasks:
+        bot.send_message(message.chat.id, f'{el[1]}')
         bot.send_message(
             message.chat.id,
-            f'Задачу: {el[1]} нужно выполнить: {el[2]}'
-        )
+            f'дата выполнения этой задачи {el[2]}')
 
 
 def get_today_tasks_statistic(message):
