@@ -1,4 +1,6 @@
 import os
+from dotenv import load_dotenv
 
-TOKEN = '6193050640:AAGxCsSYcN9ykAf6N29Z-bcLCYUFqQYJ7YQ'
-#TOKEN = os.getenv("TOKEN")
+load_dotenv()
+
+TOKEN = os.getenv("TOKEN")
