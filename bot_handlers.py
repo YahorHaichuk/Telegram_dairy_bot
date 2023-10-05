@@ -69,7 +69,10 @@ def get_user_week_tasks(message):
         'на этой неделе вам нужно сделать следующик задачи:'
     )
     for el in week_tasks:
-        bot.send_message(message.chat.id, f'Задачу: {el[1]} нужно сделать: {el[2]}')
+        bot.send_message(
+            message.chat.id,
+            f'Задачу: {el[1]} нужно сделать: {el[2]}'
+        )
 
 
 def get_task_delete(message):
@@ -166,7 +169,10 @@ def get_month_tasks(message):
     day_tasks = db.get_month_tasks(message.chat.id)
     db.close()
     for el in day_tasks:
-        bot.send_message(message.chat.id, f'Задачу: {el[1]} нужно выполнить: {el[2]}')
+        bot.send_message(
+            message.chat.id,
+            f'Задачу: {el[1]} нужно выполнить: {el[2]}'
+        )
 
 
 def get_today_tasks_statistic(message):

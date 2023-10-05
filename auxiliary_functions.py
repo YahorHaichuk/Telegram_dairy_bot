@@ -151,7 +151,7 @@ def get_days_until_today():
 
 
 def get_days_of_current_week():
-    #today = datetime.datetime.today()
+
     current_weekday = today.weekday()
     start_of_week = today - timedelta(days=current_weekday)
 
@@ -162,7 +162,6 @@ def get_days_of_current_week():
 
 
 def get_all_days_of_current_month():
-    #today = datetime.datetime.today()
     year = today.year
     month = today.month
     _, num_days = calendar.monthrange(year, month)
@@ -174,7 +173,6 @@ def get_all_days_of_current_month():
 
 def get_next_week_days_list():
     """Returns the days of the week for the next week in date format."""
-    #today = datetime.datetime.now()
     current_weekday = today.weekday()
     days_until_next_monday = (7 - current_weekday) % 7
     if current_weekday == 0:

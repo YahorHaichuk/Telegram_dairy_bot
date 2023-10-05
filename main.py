@@ -71,7 +71,7 @@ def cycle_month(call):
         ) for day in days_list
     ]
     markup.add(*buttons)
-    text = '''Выберите дни 
+    text = '''Выберите дни
     в которые будет повторятся ваша задача от сегодняшнего дня
     и до конца месяца.\n
     Вы находитесь в режиме выбора дней повтора задач
@@ -87,8 +87,6 @@ def get_task_delete_handler(message):
     get_task_delete(message)
 
     bot.register_next_step_handler(message, task_delete_handler)
-
-
 
 
 def task_delete_handler(message):
