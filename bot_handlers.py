@@ -187,7 +187,6 @@ def get_month_tasks(message):
 
 
 def get_today_tasks_statistic(message):
-    """копия метода из класса для русного вызова"""
     db = BotDb('dairy_db.sql')
     today = db.get_today_statistic(message.chat.id)
     db.close()

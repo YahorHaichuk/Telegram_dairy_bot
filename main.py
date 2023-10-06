@@ -527,8 +527,9 @@ def all_callbacks_handler(call):
             deleting_task_date = call.data.split('*')[1:][2].strip()
             db.delete(deleting_task, deleting_task_date)
             bot.send_message(
-                call.message.chat.id, f''' задача {deleting_task}
-                в день {deleting_task_date} удалена
+                call.message.chat.id, f'''
+задача {deleting_task}
+в день {deleting_task_date} удалена
 ''')
     if call.data.split('*')[0] == 'DELETE_ALL_YES':
         confirmation_delete_all_tasks_by_user_id(call.message)
