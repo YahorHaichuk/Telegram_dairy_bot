@@ -12,6 +12,9 @@ from bot_handlers import (done_today_tasks, get_day_tasks, get_editing_task_db,
                           get_task_delete, get_today_tasks_statistic,
                           get_user_week_tasks, get_week_tasks_statistic, start,
                           task, task_date, task_delete)
+
+from message_sender import CurrentHour
+
 from config import TOKEN
 from database import BotDb
 
@@ -559,6 +562,11 @@ def help_handler(message):
 
     bot.send_message(message.chat.id, text)
 
+def send_time():
+
+    hours = CurrentHour()
+    hours.start()
 
 if __name__ == '__main__':
+    send_time()
     bot.polling(none_stop=True)
