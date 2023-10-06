@@ -23,7 +23,7 @@ class CurrentHour(Thread):
                 time.sleep(3600)
                 continue
 
-            elif hour == 14:
+            elif hour == 16:
                 send_message = AutoSendMessage()
                 send_message.noon_send()
                 time.sleep(3600)
@@ -74,7 +74,8 @@ class AutoSendMessage:
             day_tasks = self.db.get_day_tasks(user)
             buttons = []
             for i in day_tasks:
-                buttons.append(types.InlineKeyboardButton(text=i, callback_data=i))
+                data = '' + i[0] + '&' + i[1]
+                buttons.append(types.InlineKeyboardButton(text=i[0], callback_data=data))
             markup.add(*buttons)
             if len(buttons) == 0:
                 bot.send_message(user[0], "У вас нет задач на сегодня")
