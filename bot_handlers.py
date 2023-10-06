@@ -104,10 +104,12 @@ def task_delete(message):
         )
 
     markup.add(*buttons)
-    text = f'''задача для удаления {result[0][0]}
-    обнаружена в следующих днях на ближайший месяц
-    пожалуйста выберите день
-    в который вы хотите удалить данную задачу'''
+    text = f'''
+задача для удаления:\n
+{result[0][0]}\n
+обнаружена в следующих днях на ближайший месяц
+пожалуйста выберите день в который вы хотите удалить данную задачу
+'''
     if result is not None:
         bot.send_message(message.chat.id, text, reply_markup=markup)
     else:
@@ -139,10 +141,13 @@ def get_editing_task_db(message):
 
     markup.add(*buttons)
     if result is not None and len(result) > 0:
-        text = f'''Редактируемая задача {result[0][0]}
-        обнаружена в  следующих днях на ближайжую неделю
-                пожалуйста выберите день
-                в который вы хотите редактировать данную задачу'''
+        text = f'''
+Редактируемая задача: \n
+{result[0][0]}\n
+обнаружена в  следующих днях на ближайжую неделю
+пожалуйста выберите день
+в который вы хотите редактировать данную задачу
+'''
         bot.send_message(message.chat.id, text, reply_markup=markup)
     elif message.text == '/today_tasks':
         get_day_tasks(message)
@@ -191,7 +196,7 @@ def get_today_tasks_statistic(message):
 
     bot.send_message(
         message.chat.id,
-        'Вот важи результаты на текуший месяц'
+        'Ваши результаты на текуший месяц:'
     )
 
     for i in today:
@@ -204,7 +209,7 @@ def get_today_tasks_statistic(message):
 
     bot.send_message(
         message.chat.id,
-        f' сегодня вы продуктивно провели {today_total_time} минут'
+        f' Cегодня вы продуктивно провели {today_total_time} минут'
     )
 
 
@@ -266,5 +271,5 @@ def done_today_tasks(message):
     else:
         bot.send_message(
             message.chat.id,
-            'нажмите на выполненную задачу',
+            'Нажмите на выполненную задачу',
             reply_markup=markup)
