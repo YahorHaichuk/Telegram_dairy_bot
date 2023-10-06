@@ -1,4 +1,5 @@
 import datetime
+import os.path
 import sys
 
 import telebot
@@ -34,12 +35,14 @@ days = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']
 
 @bot.message_handler(commands=['create_db'])
 def create_db(message):
+    """Database creation."""
     db = BotDb('dairy_db.sql')
     db.create_db(message.chat.id)
 
 
 @bot.message_handler(commands=['week'])
 def week_tasks_handler(message):
+    """shows a list of tasks for the current week."""
     get_user_week_tasks(message)
 
 
@@ -47,6 +50,8 @@ def week_tasks_handler(message):
 def create_back_up(message):
     source_db_path = '/app/dairy_db.sql'
     backup_folder = '/app/db_backup'
+    if not  os.path.exists(backup_folder):
+        os.makedirs(backup_folder)
     backup = BotDb('dairy_db.sql')
     backup.create_back_up(
         source_db_path=source_db_path, backup_folder=backup_folder
