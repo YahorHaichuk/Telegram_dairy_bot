@@ -44,6 +44,8 @@ def week_tasks_handler(message):
 def create_back_up(message):
     source_db_path = '/app/dairy_db.sql'
     backup_folder = '/app/db_backup'
+    if not  os.path.exists(backup_folder):
+        os.makedirs(backup_folder)
     backup = BotDb('dairy_db.sql')
     backup.create_back_up(
         source_db_path=source_db_path, backup_folder=backup_folder
