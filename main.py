@@ -1,4 +1,5 @@
 import datetime
+import os.path
 import sys
 
 import telebot
@@ -12,6 +13,9 @@ from bot_handlers import (done_today_tasks, get_day_tasks, get_editing_task_db,
                           get_task_delete, get_today_tasks_statistic,
                           get_user_week_tasks, get_week_tasks_statistic, start,
                           task, task_date, task_delete)
+
+from message_sender import CurrentHour
+
 from config import TOKEN
 from database import BotDb
 
@@ -31,17 +35,20 @@ days = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']
 
 @bot.message_handler(commands=['create_db'])
 def create_db(message):
+    """Database creation."""
     db = BotDb('dairy_db.sql')
     db.create_db(message.chat.id)
 
 
 @bot.message_handler(commands=['week'])
 def week_tasks_handler(message):
+    """sends the user a list of tasks for today in chat."""
     get_user_week_tasks(message)
 
 
 @bot.message_handler(commands=['backup'])
 def create_back_up(message):
+    """creates a database backup in a docker container."""
     source_db_path = '/app/dairy_db.sql'
     backup_folder = '/app/db_backup'
     if not  os.path.exists(backup_folder):
@@ -54,15 +61,19 @@ def create_back_up(message):
 
 @bot.message_handler(commands=['today_tasks'])
 def get_day_tasks_handler(message):
+    """sends the user a list of tasks for today in chat."""
     get_day_tasks(message)
 
 
 @bot.message_handler(commands=['month'])
 def get_month_tasks_handler(message):
+    """sends the user a list of tasks for the current month in chat."""
     get_month_tasks(message)
 
 
 def cycle_month(call):
+    """changes the a recurring period: week, month or no recurring button
+    to a button for selecting days of the current month"""
     days_list = days_until_end_of_month_list()
     current_task = call.data.split('*')[1:2][0]
 
@@ -86,17 +97,20 @@ def cycle_month(call):
 
 @bot.message_handler(commands=['task_delete'])
 def get_task_delete_handler(message):
+    """calls a function that requests input for a task to delete."""
     get_task_delete(message)
 
     bot.register_next_step_handler(message, task_delete_handler)
 
 
 def task_delete_handler(message):
+    """calls a function that deletes a task from the database."""
     task_delete(message)
 
 
 @bot.message_handler(commands=['task_edit'])
 def get_editing_task_text_handler(message):
+    """calls a function that requests input for a task to edit."""
     text = """Ведите задачу для редактирования
     Чтобы получить список задач на сегодня нажмите /today_tasks\n
     Чтобы получить список задач на неделю нажмите /week\n
@@ -108,10 +122,12 @@ def get_editing_task_text_handler(message):
 
 
 def get_editing_task_db_handler(message):
+    """calls a function that looks for a task to change in the database."""
     get_editing_task_db(message)
 
 
 def update_info_handler(message, editing_task, editing_date):
+    """asks the user for a updated task text."""
     data = [editing_task, editing_date]
     bot.send_message(message.chat.id, 'Введите отредактированный текст:')
 
@@ -119,6 +135,7 @@ def update_info_handler(message, editing_task, editing_date):
 
 
 def update_task_handler(message, data):
+    """calls a function that updates a task in the database."""
     db = BotDb('dairy_db.sql')
     db.update_task(message.text, data[0], data[1])
     bot.send_message(message.chat.id, 'Задача изменена')
@@ -126,11 +143,13 @@ def update_task_handler(message, data):
 
 @bot.message_handler(commands=['task_add'])
 def start_handler(message):
+    """calls a function that requests input of the text of the task to be added."""
     start(message)
     bot.register_next_step_handler(message, task_handler)
 
 
 def task_handler(message):
+    """calls a function that requests the date of the task to be added"""
     task(message)
     task_text = f'*{message.text}*'
     bot.register_next_step_handler(message, task_date, task_text=task_text)
@@ -561,6 +580,11 @@ def help_handler(message):
 
     bot.send_message(message.chat.id, text)
 
+def send_time():
+
+    hours = CurrentHour()
+    hours.start()
 
 if __name__ == '__main__':
+    send_time()
     bot.polling(none_stop=True)

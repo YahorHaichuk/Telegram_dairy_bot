@@ -348,7 +348,7 @@ class BotDb:
                 backup_folder,
                 f'backup_database_{today}.sql')
             shutil.copyfile(source_db_path, backup_file_path)
-            bot.send_message(927883641, "Резервная копия создана успешно!")
+            bot.send_message(927883641, "Резервная копия БД создана успешно!")
         except Exception as e:
             bot.send_message(927883641,
                              f'Сбой при создании резервной копии БД:\n {e}')

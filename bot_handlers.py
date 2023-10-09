@@ -33,6 +33,8 @@ def task(message):
 
 
 def task_date(message, task_text):
+    """sends the user a message with buttons for selecting
+    a recurring period: week, month or no recurring"""
     db = BotDb('dairy_db.sql')
     try:
         db.task_date(task_text, message.text, message)
