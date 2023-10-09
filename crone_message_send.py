@@ -9,34 +9,8 @@ from database import BotDb
 
 bot = telebot.TeleBot(TOKEN)
 
-
-class CurrentHour():
-
-    def run(self):
-        timer = datetime.now()
-        hour = timer.hour
-        if hour == 8:
-            send_message = AutoSendMessage()
-            send_message.morning_send()
-
-        elif hour == 16:
-            send_message = AutoSendMessage()
-            send_message.noon_send()
-
-        elif hour == 18:
-            send_message = AutoSendMessage()
-            send_message.evening_send()
-
-        elif hour == 21:
-            send_message = AutoSendMessage()
-            send_message.day_end()
-
-        elif hour == 23:
-            source_db_path ='/app/dairy_db.sql'   #Путь к исходной базе данных
-            backup_folder = '/app/db_backup'  #Путь к папке с резервными копиями
-            backup = BotDb('dairy_db.sql')
-            backup.create_back_up(source_db_path=source_db_path, backup_folder=backup_folder)
-
+timer = datetime.now()
+hour = timer.hour
 
 class AutoSendMessage:
     def __init__(self):
@@ -83,12 +57,41 @@ class AutoSendMessage:
         self.send_today_tasks_in_buttons(text)
 
     def evening_send(self):
-        text = 'День подходит к концу, выполнил еще что нибудь? если нет надо поднажать!'
+        text = f'Уже {hour} часов! Поднажмем если остались неоконченные задачи!'
         self.send_today_tasks_in_buttons(text)
 
     def day_end(self):
         text = 'Наступил вечер, саоме время подвести итоги дня'
         self.send_today_tasks_in_buttons(text)
 
-sender = CurrentHour()
-sender.run()
+def run():
+    timer = datetime.now()
+    hour = timer.hour
+    if hour == 6:
+        send_message = AutoSendMessage()
+        send_message.morning_send()
+
+    if hour == 10:
+        send_message = AutoSendMessage()
+        send_message.noon_send()
+
+    if hour == 16:
+        send_message = AutoSendMessage()
+        send_message.evening_send()
+
+    if hour == 19:
+        send_message = AutoSendMessage()
+        send_message.day_end()
+
+    if hour == 21:
+        source_db_path ='/app/dairy_db.sql'   #Путь к исходной базе данных
+        backup_folder = '/app/db_backup'  #Путь к папке с резервными копиями
+        backup = BotDb('dairy_db.sql')
+        backup.create_back_up(source_db_path=source_db_path, backup_folder=backup_folder)
+
+    else:
+        pass
+
+
+if __name__ == '__main__':
+    run()
