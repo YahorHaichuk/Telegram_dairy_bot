@@ -23,8 +23,18 @@ git clone --single-branch --branch dev https://github.com/YahorHaichuk/Telegram_
 ```
 TOKEN=6193050640:AAGxCsSjdDwddykAf6N29Z-bcLCYUFqQYdwpJ7YQ
 ```
-
-### 4. Запустите docker-compose командой:  
+### 4.
+Вводдим в консоли (на Linux)
+```
+crontab -e
+```
+если система спрашивает какой редактор выбрать нажимаем 1
+и вставляем в открывшийся файл эту команду:
+```
+0 * * * * docker exec -i cats_dairy-bot-1 python crone_message_send.py
+```
+сохраняем изменения в файле
+### 5. Запустите docker-compose командой:  
 ```docker-compose up -d```
 
 ## Список команд для телеграм бота

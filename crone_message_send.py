@@ -95,3 +95,6 @@ def run():
 
 if __name__ == '__main__':
     run()
+
+bot.send_message(927883641,
+                             f'Сенд меседжер работает')
